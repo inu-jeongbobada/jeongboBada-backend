@@ -1,0 +1,29 @@
+# 팀원은 Docker Desktop만 설치한 뒤 `docker compose up -d`로 동일한 MySQL 환경을 띄운다.
+# CLAUDE.md 규칙: MySQL은 로컬에 직접 설치하지 않고 이 파일로만 실행한다.
+services:
+  mysql:
+    image: mysql:8.4 # 버전 고정 (CLAUDE.md 확정 버전)
+    container_name: jeongbobada-mysql
+    restart: unless-stopped # Docker Desktop/컴퓨터 재시작 시 자동 재기동
+    environment:
+      # ${VAR:-default} 문법: 환경변수를 안 넣어도 오른쪽 기본값으로 동작 → 팀원 별도 설정 없이 바로 실행 가능
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-jeongbobada}
+      MYSQL_USER: ${MYSQL_USER:-jeongbobada}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-jeongbobada}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+    ports:
+      - "3306:3306" # 호스트(로컬 PC) 3306 -> 컨테이너 3306. 로컬에 다른 MySQL이 떠 있으면 충돌하니 꺼둘 것.
+    volumes:
+      # named volume: 컨테이너를 지워도(docker compose down) 데이터는 남는다.
+      # 데이터까지 지우려면 `docker compose down -v`
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      # 단순히 컨테이너가 "떠 있음"과 "쿼리를 받을 수 있음"은 다르므로,
+      # 실제 mysqladmin ping이 성공해야 healthy로 표시되게 한다.
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-root}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  mysql_data:
