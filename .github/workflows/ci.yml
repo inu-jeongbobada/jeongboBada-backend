@@ -4,9 +4,9 @@ name: CI
 # 목적은 "부팅되지 않는 코드가 main에 머지되는 것"을 막는 것이다.
 on:
   pull_request:
-    branches: [main]
+    branches: [main, develop]
   push:
-    branches: [main]
+    branches: [main, develop]
 
 permissions:
   contents: read
