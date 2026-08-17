@@ -30,6 +30,12 @@ docker compose up -d
 
 `docker-compose.yml`에 MySQL 8.4 컨테이너 설정이 고정되어 있어, 별도 설정 없이 팀원 누구나 동일한 DB 환경을 띄울 수 있습니다.
 
+값을 바꾸고 싶다면(다른 비밀번호 등) `.env.example`을 복사해 `.env`로 저장한 뒤 값을 수정하세요. `.env`가 없어도 기본값으로 정상 동작합니다.
+
+```bash
+cp .env.example .env
+```
+
 ### 3. 애플리케이션 설정
 
 `application.yml`은 DB 비밀번호가 포함되어 있어 git에 커밋하지 않습니다. 예제 파일을 복사해서 사용하세요.

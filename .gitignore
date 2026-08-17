@@ -49,5 +49,8 @@ out/
 application.yml
 application-*.yml
 
+### Local env (docker-compose용, .env.example 참고) ###
+.env
+
 ### Claude ###
 CLAUDE.md
