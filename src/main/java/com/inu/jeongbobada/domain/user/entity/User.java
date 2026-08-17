@@ -1,0 +1,38 @@
+package com.inu.jeongbobada.domain.user.entity;
+
+import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "USERS") // USER -> SQL에서 예약어일 가능성 존재
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "USER_ID")
+    private Long userId;
+
+    // nullable -> DB에서 null X, unique -> DB에서 동일한 값 X, length -> DB에 저장될 최대 길이
+    @Column(name = "STUDENT_ID", nullable = false, unique = true, length = 20)
+    private String studentId;
+
+    @Column(name = "PASSWORD", nullable = false)
+    private String password;
+
+    @Column(name = "NICKNAME", nullable = false, unique = true, length = 50)
+    private String nickname;
+
+    @Column(name = "ROLE", nullable = false, length = 20)
+    private String role;
+
+    @Column(name = "DEPARTMENT", length = 100)
+    private String department;
+
+    @Column(name = "CREATED_DATE", nullable = false)
+    private LocalDateTime createdDate;
+}
