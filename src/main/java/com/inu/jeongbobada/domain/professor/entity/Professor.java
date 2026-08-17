@@ -19,16 +19,16 @@ public class Professor {
     @Column(name = "PROFESSOR_ID")
     private Long professorId;
 
-    @Column(name = "PROFESSOR_NAME")
+    @Column(name = "PROFESSOR_NAME", nullable = false, length = 20)
     private String professorName;
 
-    @Column(name = "PROFESSOR_DETAIL")
+    @Column(name = "PROFESSOR_DETAIL", nullable = false)
     private String professorDetail;
 
-    @Column(name = "PROFESSOR_IMAGE_URL")
+    @Column(name = "PROFESSOR_IMAGE_URL", nullable = false)
     private String professorImageURL;
 
-    // mappedBy -> 다른 데이터베이스에서 FK 관리
+    // mappedBy -> 다른 DB 테이블에서 FK 관리
     @OneToOne(mappedBy = "professor", fetch = FetchType.LAZY)
     private Lab lab;
 
@@ -36,4 +36,5 @@ public class Professor {
     private List<ProfessorComment> professorComments;
 
     // course 아직 작성 X
+    // course 작성 후 생성자 작성
 }

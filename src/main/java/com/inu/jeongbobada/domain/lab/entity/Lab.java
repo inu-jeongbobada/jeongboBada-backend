@@ -17,15 +17,22 @@ public class Lab {
     private Long labId;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "PROFESSOR_ID")
+    @JoinColumn(name = "PROFESSOR_ID", nullable = false)
     private Professor professor;
 
-    @Column(name = "LAB_NAME")
+    @Column(name = "LAB_NAME", nullable = false, length = 100)
     private String labName;
 
-    @Column(name = "LAB_DETAIL")
+    @Column(name = "LAB_DETAIL", nullable = false)
     private String labDetail;
 
-    @Column(name = "LAB_URL")
-    private String labURL;
+    @Column(name = "LAB_URL", nullable = false)
+    private String labUrl;
+
+    public Lab(Professor professor, String labName, String labDetail, String labUrl){
+        this.professor = professor;
+        this.labName = labName;
+        this.labDetail = labDetail;
+        this.labUrl = labUrl;
+    }
 }

@@ -1,10 +1,12 @@
 package com.inu.jeongbobada.domain.professorComment.entity;
 
 import com.inu.jeongbobada.domain.professor.entity.Professor;
+import com.inu.jeongbobada.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -19,21 +21,32 @@ public class ProfessorComment {
     private Long professorCommentId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "PROFESSOR_ID")
+    @JoinColumn(name = "PROFESSOR_ID", nullable = false)
     private Professor professor;
 
-    @Column(name = "PROFESSOR_COMMENT_DETAIL")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "USER_ID", nullable = false)
+    private User user;
+
+    @Column(name = "PROFESSOR_COMMENT_DETAIL", nullable = false)
     private String professorCommentDetail;
 
-    @Column(name = "PROFESSOR_COMMENT_RATE")
+    @Column(name = "PROFESSOR_COMMENT_RATE", nullable = false)
     private int professorCommentRate;
 
-    @Column(name = "PROFESSOR_COMMENT_DATE")
+    @CreationTimestamp
+    @Column(name = "PROFESSOR_COMMENT_DATE", nullable = false)
     private LocalDateTime professorCommentDate;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "PROFESSOR_COMMENT_ANNONYMITY")
+    @Column(name = "PROFESSOR_COMMENT_ANONYMITY", nullable = false)
     private ProfessorCommentAnonymity professorCommentAnonymity;
 
-    // user 아직 작성 X
+    public ProfessorComment(Professor professor, User user, String professorCommentDetail, int professorCommentRate, ProfessorCommentAnonymity professorCommentAnonymity){
+        this.professor = professor;
+        this.user = user;
+        this.professorCommentDetail = professorCommentDetail;
+        this.professorCommentRate = professorCommentRate;
+        this.professorCommentAnonymity = professorCommentAnonymity;
+    }
 }
