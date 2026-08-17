@@ -6,9 +6,11 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "PROFESSOR_COMMENT")
 public class ProfessorComment {
     @Id
@@ -27,7 +29,7 @@ public class ProfessorComment {
     private int professorCommentRate;
 
     @Column(name = "PROFESSOR_COMMENT_DATE")
-    private String professorCommentDate;
+    private LocalDateTime professorCommentDate;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "PROFESSOR_COMMENT_ANNONYMITY")
