@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -27,12 +28,22 @@ public class User {
     @Column(name = "NICKNAME", nullable = false, unique = true, length = 50)
     private String nickname;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "ROLE", nullable = false, length = 20)
-    private String role;
+    private UserRole userRole;
 
     @Column(name = "DEPARTMENT", length = 100)
     private String department;
 
+    @CreationTimestamp
     @Column(name = "CREATED_DATE", nullable = false)
     private LocalDateTime createdDate;
+
+    public User(String studentId, String password, String nickname, UserRole userRole, String department){
+        this.studentId = studentId;
+        this.password = password;
+        this.nickname = nickname;
+        this.userRole = userRole;
+        this.department = department;
+    }
 }
