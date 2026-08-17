@@ -1,4 +1,4 @@
-# 팀원은 Docker Desktop만 설치한 뒤 `docker compose up -d`로 동일한 MySQL 환경을 띄운다.
+# 팀원은 Docker Desktop만 설치한 뒤 `docker compose up -d`로 MySQL + 백엔드를 함께 띄운다.
 # CLAUDE.md 규칙: MySQL은 로컬에 직접 설치하지 않고 이 파일로만 실행한다.
 services:
   mysql:
@@ -24,6 +24,24 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jeongbobada-backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy # MySQL이 healthy 상태가 될 때까지 기동 대기
+    environment:
+      # application.yml은 .gitignore 대상이라 이미지에 없음 (CI와 동일하게 환경변수로 주입, relaxed binding).
+      # 컨테이너 안에서는 mysql 컨테이너를 서비스명(mysql)으로 찾아가야 하므로 localhost가 아님.
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-jeongbobada}
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-jeongbobada}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-jeongbobada}
+    ports:
+      - "8080:8080"
 
 volumes:
   mysql_data:
