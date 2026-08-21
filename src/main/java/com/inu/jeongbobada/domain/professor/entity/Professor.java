@@ -26,7 +26,7 @@ public class Professor {
     private String professorDetail;
 
     @Column(name = "PROFESSOR_IMAGE_URL", nullable = false)
-    private String professorImageURL;
+    private String professorImageUrl;
 
     // mappedBy -> 다른 DB 테이블에서 FK 관리
     @OneToOne(mappedBy = "professor", fetch = FetchType.LAZY)
