@@ -2,6 +2,7 @@ package com.inu.jeongbobada.domain.course.entity;
 
 
 
+import com.inu.jeongbobada.domain.course.enums.*;
 import com.inu.jeongbobada.domain.courseReview.entity.CourseReview;
 import com.inu.jeongbobada.domain.material.entity.Material;
 import com.inu.jeongbobada.domain.professor.entity.Professor;

@@ -1,4 +1,4 @@
-package com.inu.jeongbobada.domain.course.entity;
+package com.inu.jeongbobada.domain.course.enums;
 
 public enum CourseType {
     MAJOR_CORE,

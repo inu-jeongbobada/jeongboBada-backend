@@ -1,5 +1,6 @@
 package com.inu.jeongbobada.domain.material.entity;
 import com.inu.jeongbobada.domain.course.entity.Course;
+import com.inu.jeongbobada.domain.material.enums.MaterialType;
 import com.inu.jeongbobada.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -51,6 +52,28 @@ public class Material {
 
     @Column(name = "UPDATED_AT")
     private LocalDateTime updatedAt;
+
+
+    public Material(
+        Course course,
+        User user,
+        String title,
+        String content,
+        MaterialType materialType,
+        String fileUrl,
+        String originalFileName,
+        Long fileSize
+    ) {
+        this.course = course;
+        this.user = user;
+        this.title = title;
+        this.content = content;
+        this.materialType = materialType;
+        this.fileUrl = fileUrl;
+        this.originalFileName = originalFileName;
+        this.fileSize = fileSize;
+    }
+
 
 
 

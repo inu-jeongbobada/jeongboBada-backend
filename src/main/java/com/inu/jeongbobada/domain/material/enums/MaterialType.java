@@ -1,4 +1,4 @@
-package com.inu.jeongbobada.domain.material.entity;
+package com.inu.jeongbobada.domain.material.enums;
 
 public enum MaterialType {
     LECTURE_NOTE,
