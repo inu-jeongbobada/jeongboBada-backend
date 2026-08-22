@@ -12,14 +12,14 @@ public class ProfessorDetailResponseDto {
     private String professorImageUrl;
     private String professorDetail;
 
-    private LabDetailResponseDto labDetailResponseDto;
-    private List<ProfessorCommentDetailResponseDto> professorCommentDetailResponseDtos;
+    private LabDetailResponseDto labDetail;
+    private List<ProfessorCommentDetailResponseDto> professorCommentDetails;
 
-    public ProfessorDetailResponseDto(String professorName, String professorImageUrl, String professorDetail, LabDetailResponseDto labDetailResponseDto, List<ProfessorCommentDetailResponseDto> professorCommentDetailResponseDtos) {
+    public ProfessorDetailResponseDto(String professorName, String professorImageUrl, String professorDetail, LabDetailResponseDto labDetail, List<ProfessorCommentDetailResponseDto> professorCommentDetails) {
         this.professorName = professorName;
         this.professorImageUrl = professorImageUrl;
         this.professorDetail = professorDetail;
-        this.labDetailResponseDto = labDetailResponseDto;
-        this.professorCommentDetailResponseDtos = professorCommentDetailResponseDtos;
+        this.labDetail = labDetail;
+        this.professorCommentDetails = professorCommentDetails;
     }
 }

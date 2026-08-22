@@ -9,12 +9,12 @@ public class ProfessorListResponseDto {
     private String professorName;
     private String professorImageUrl;
 
-    private LabListResponseDto labListResponseDto;
+    private LabListResponseDto labList;
 
-    public ProfessorListResponseDto(Long professorId, String professorName, String professorImageUrl, LabListResponseDto labListResponseDto) {
+    public ProfessorListResponseDto(Long professorId, String professorName, String professorImageUrl, LabListResponseDto labList) {
         this.professorId = professorId;
         this.professorName = professorName;
         this.professorImageUrl = professorImageUrl;
-        this.labListResponseDto = labListResponseDto;
+        this.labList = labList;
     }
 }
