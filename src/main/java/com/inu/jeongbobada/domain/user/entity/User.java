@@ -39,7 +39,7 @@ public class User {
     @Column(name = "CREATED_DATE", nullable = false)
     private LocalDateTime createdDate;
 
-    public User(String studentId, String password, String nickname, UserRole userRole, String department){
+    public User(String studentId, String password, String nickname, UserRole userRole, String department) {
         this.studentId = studentId;
         this.password = password;
         this.nickname = nickname;
