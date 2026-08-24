@@ -8,7 +8,6 @@ public class ProfessorListResponseDto {
     private Long professorId;
     private String professorName;
     private String professorImageUrl;
-
     private LabListResponseDto labList;
 
     public ProfessorListResponseDto(Long professorId, String professorName, String professorImageUrl, LabListResponseDto labList) {
