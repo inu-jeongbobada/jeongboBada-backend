@@ -2,6 +2,7 @@ package com.inu.jeongbobada.global.common;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.inu.jeongbobada.global.exception.code.GlobalErrorCode;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
@@ -56,5 +57,20 @@ class ApiResponseTest {
         assertThat(response.success()).isFalse();
         assertThat(json.has("data")).isFalse();
         assertThat(json.get("message").asText()).isEqualTo(message);
+    }
+
+    @Test
+    void error_ErrorCode로_만들면_code와_httpStatus가_ErrorCode를_따라간다() throws Exception {
+        // given
+        GlobalErrorCode errorCode = GlobalErrorCode.INVALID_INPUT_VALUE;
+
+        // when
+        ApiResponse<Void> response = ApiResponse.error(errorCode);
+        JsonNode json = objectMapper.readTree(objectMapper.writeValueAsString(response));
+
+        // then
+        assertThat(response.httpStatus()).isEqualTo(errorCode.getHttpStatus());
+        assertThat(json.get("code").asText()).isEqualTo(errorCode.getCode());
+        assertThat(json.get("message").asText()).isEqualTo(errorCode.getMessage());
     }
 }
