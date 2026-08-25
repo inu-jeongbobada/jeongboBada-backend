@@ -12,6 +12,10 @@ public enum UserErrorCode implements BaseErrorCode {
     ;
 
     private final HttpStatus httpStatus;
+    // code를 enum 상수 이름(name())으로 대체하지 않고 별도 필드로 둠.
+    // name()을 그대로 쓰면 나중에 상수 이름을 리팩터링(가독성 개선 등)할 때마다
+    // 프론트로 나가는 응답 코드 문자열까지 같이 바뀌어버려서, API 계약이 자바 변수명에 묶이게 된다.
+    // code 필드를 따로 두면 자바 코드 리팩터링과 API 계약을 분리할 수 있다.
     private final String code;
     private final String message;
 
