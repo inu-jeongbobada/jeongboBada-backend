@@ -3,6 +3,7 @@ package com.inu.jeongbobada.domain.courseReview.entity;
 import com.inu.jeongbobada.domain.course.entity.Course;
 import com.inu.jeongbobada.domain.courseReview.enums.*;
 import com.inu.jeongbobada.domain.user.entity.User;
+import com.inu.jeongbobada.global.common.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -20,7 +21,7 @@ import lombok.NoArgsConstructor;
         )
     }
 )
-public class CourseReview {
+public class CourseReview extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "REVIEW_ID")
