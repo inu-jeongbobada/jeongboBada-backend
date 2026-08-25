@@ -2,18 +2,17 @@ package com.inu.jeongbobada.domain.material.entity;
 import com.inu.jeongbobada.domain.course.entity.Course;
 import com.inu.jeongbobada.domain.material.enums.MaterialType;
 import com.inu.jeongbobada.domain.user.entity.User;
+import com.inu.jeongbobada.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "MATERIAL")
-public class Material {
+public class Material extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "MATERIAL_ID")
@@ -47,13 +46,6 @@ public class Material {
     @Column(name = "FILE_SIZE")
     private Long fileSize;
 
-    @Column(name = "CREATED_AT")
-    private LocalDateTime createdAt;
-
-    @Column(name = "UPDATED_AT")
-    private LocalDateTime updatedAt;
-
-
     public Material(
         Course course,
         User user,
@@ -73,8 +65,4 @@ public class Material {
         this.originalFileName = originalFileName;
         this.fileSize = fileSize;
     }
-
-
-
-
 }

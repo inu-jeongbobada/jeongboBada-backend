@@ -1,18 +1,16 @@
 package com.inu.jeongbobada.domain.user.entity;
 
+import com.inu.jeongbobada.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "USERS") // USER -> SQL에서 예약어일 가능성 존재
-public class User {
+public class User extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "USER_ID")
@@ -34,10 +32,6 @@ public class User {
 
     @Column(name = "DEPARTMENT", length = 100)
     private String department;
-
-    @CreationTimestamp
-    @Column(name = "CREATED_DATE", nullable = false)
-    private LocalDateTime createdDate;
 
     public User(String studentId, String password, String nickname, UserRole userRole, String department) {
         this.studentId = studentId;
