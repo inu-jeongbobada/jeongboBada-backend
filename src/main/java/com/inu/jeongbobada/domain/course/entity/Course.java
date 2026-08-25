@@ -3,15 +3,13 @@ package com.inu.jeongbobada.domain.course.entity;
 
 
 import com.inu.jeongbobada.domain.course.enums.*;
-import com.inu.jeongbobada.domain.courseReview.entity.CourseReview;
-import com.inu.jeongbobada.domain.material.entity.Material;
 import com.inu.jeongbobada.domain.professor.entity.Professor;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
+
 
 
 @Entity
@@ -21,7 +19,6 @@ import java.util.List;
 public class Course {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-
     @Column(name = "COURSE_ID")
     private Long courseId;
 
@@ -38,7 +35,7 @@ public class Course {
     @Column(name = "GRADE",nullable = false)
     private Grade grade;
 
-    @Column(name = "COURSE_TIME")
+    @Column(name = "COURSE_TIME",nullable = false)
     private String courseTime;
 
     @Enumerated(EnumType.STRING)
@@ -46,10 +43,10 @@ public class Course {
     private Semester semester;
 
     @Column(name = "COURSE_DETAIL",columnDefinition = "TEXT", nullable = false)
-    private String courseDetail ;
+    private String courseDetail;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "CREDIT",nullable = false)
+    @Column(name = "CREDITS",nullable = false)
     private Credits credits;
 
     @Enumerated(EnumType.STRING)
@@ -58,17 +55,11 @@ public class Course {
 
     @Enumerated(EnumType.STRING)
     @Column(name ="IS_ONLINE",nullable = false)
-    private IsOnline isOnline;
+        private IsOnline isOnline;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "PROFESSOR_ID")
     private Professor professor;
-
-    @OneToMany(mappedBy = "course", fetch = FetchType.LAZY)
-    private List<CourseReview> review;
-
-    @OneToMany(mappedBy = "course", fetch = FetchType.LAZY)
-    private List<Material> material;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "EVALUATION_TYPE",nullable = false)
