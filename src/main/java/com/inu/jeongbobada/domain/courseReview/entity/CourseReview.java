@@ -3,14 +3,25 @@ package com.inu.jeongbobada.domain.courseReview.entity;
 import com.inu.jeongbobada.domain.course.entity.Course;
 import com.inu.jeongbobada.domain.courseReview.enums.*;
 import com.inu.jeongbobada.domain.user.entity.User;
+import com.inu.jeongbobada.global.common.BaseEntity;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class CourseReview {
+@Table(name = "COURSE_REVIEW",
+    uniqueConstraints = {
+        @UniqueConstraint(
+            name = "UK_USER_COURSE_REVIEW",
+            columnNames = {"USER_ID", "COURSE_ID"}
+        )
+    }
+)
+public class CourseReview extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "REVIEW_ID")
@@ -30,8 +41,9 @@ public class CourseReview {
     @Column(name = "RATING",nullable = false)
     private Rating rating;
 
-
-    @Column(name = "CONTENT", columnDefinition = "TEXT")
+    @NotBlank
+    @Size(min = 20, max = 500)
+    @Column(name = "CONTENT",length = 500, nullable = false)
     private String content;
 
 
@@ -54,7 +66,7 @@ public class CourseReview {
 
 
 
-  //많은지 안많은지
+    //조모임 많은지 안많은지
     @Enumerated(EnumType.STRING)
     @Column(name = "GROUP_ACTIVITY", nullable = false)
     private GroupActivity groupActivity;
