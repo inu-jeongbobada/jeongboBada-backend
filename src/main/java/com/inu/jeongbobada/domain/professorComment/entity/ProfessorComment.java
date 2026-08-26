@@ -28,7 +28,7 @@ public class ProfessorComment {
     @JoinColumn(name = "USER_ID", nullable = false)
     private User user;
 
-    @Column(name = "PROFESSOR_COMMENT_DETAIL", nullable = false)
+    @Column(name = "PROFESSOR_COMMENT_DETAIL", columnDefinition = "TEXT", nullable = false)
     private String professorCommentDetail;
 
     @Column(name = "PROFESSOR_COMMENT_RATE", nullable = false)
@@ -42,7 +42,7 @@ public class ProfessorComment {
     @Column(name = "PROFESSOR_COMMENT_ANONYMITY", nullable = false)
     private ProfessorCommentAnonymity professorCommentAnonymity;
 
-    public ProfessorComment(Professor professor, User user, String professorCommentDetail, int professorCommentRate, ProfessorCommentAnonymity professorCommentAnonymity){
+    public ProfessorComment(Professor professor, User user, String professorCommentDetail, int professorCommentRate, ProfessorCommentAnonymity professorCommentAnonymity) {
         this.professor = professor;
         this.user = user;
         this.professorCommentDetail = professorCommentDetail;
