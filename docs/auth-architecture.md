@@ -33,10 +33,41 @@ Spring Security 필터 체인 구조상 거의 정형화된 패턴을 따른다.
 
 ## 상태
 
-- [ ] `SecurityConfig` (permitAll: `/api/auth/**`, `/swagger-ui/**`, `/v3/api-docs/**`)
+### 1. 인증 기반 설정
+- [x] `jjwt` 의존성 추가
+- [x] JWT 설정 프로퍼티 추가
+- [x] `SecurityConfig`
+- [x] `PasswordEncoder`
+- [x] Swagger 및 인증 API `permitAll`
+- [x] 세션·폼 로그인·HTTP Basic 비활성화
+
+### 2. 회원가입 및 로그인
+- [ ] `User`의 `studentId`, `password`, `role` 확인
+- [ ] `UserRepository.findByStudentId`
+- [ ] `SignupRequest`
+- [ ] `LoginRequest`
+- [ ] `TokenResponse`
+- [ ] `CustomUserDetailsService`
+- [ ] 회원가입 시 BCrypt 암호화
+- [ ] `AuthenticationManager` 기반 로그인
+
+### 3. JWT 인증
+- [ ] `JwtProperties`
 - [ ] `JwtTokenProvider`
 - [ ] `JwtAuthenticationFilter`
-- [ ] `CustomUserDetailsService`
 - [ ] `JwtAuthenticationEntryPoint`
-- [ ] `AuthController` (`signup`, `login`)
-- [ ] `application.yml.example`에 `jwt.secret`, `jwt.expiration` 추가
+- [ ] `JwtAccessDeniedHandler`
+- [ ] `AuthController`
+- [ ] 정상·누락·변조·만료 토큰 테스트
+
+### 4. 후속 작업
+- [ ] Refresh Token 저장 구조
+- [ ] `/api/auth/reissue`
+- [ ] `/api/auth/logout`
+- [ ] Refresh Token 해시 저장 및 회전
+
+# 예상 브랜치
+- feat/security-config
+- feat/auth-login
+- feat/jwt-authentication
+- feat/refresh-token
