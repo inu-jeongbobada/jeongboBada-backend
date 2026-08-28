@@ -34,12 +34,12 @@ Spring Security 필터 체인 구조상 거의 정형화된 패턴을 따른다.
 ## 상태
 
 ### 1. 인증 기반 설정
-- [ ] `jjwt` 의존성 추가
-- [ ] JWT 설정 프로퍼티 추가
-- [ ] `SecurityConfig`
-- [ ] `PasswordEncoder`
-- [ ] Swagger 및 인증 API `permitAll`
-- [ ] 세션·폼 로그인·HTTP Basic 비활성화
+- [x] `jjwt` 의존성 추가
+- [x] JWT 설정 프로퍼티 추가
+- [x] `SecurityConfig`
+- [x] `PasswordEncoder`
+- [x] Swagger 및 인증 API `permitAll`
+- [x] 세션·폼 로그인·HTTP Basic 비활성화
 
 ### 2. 회원가입 및 로그인
 - [ ] `User`의 `studentId`, `password`, `role` 확인
