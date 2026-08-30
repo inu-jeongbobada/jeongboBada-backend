@@ -37,6 +37,7 @@ public class SecurityConfig {
         return http.build();
     }
 
+    //DB에 저장할때 암호화 된 형태로 저장
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
