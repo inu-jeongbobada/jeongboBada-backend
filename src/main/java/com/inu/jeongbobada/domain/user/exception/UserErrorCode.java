@@ -9,6 +9,7 @@ public enum UserErrorCode implements BaseErrorCode {
 
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_404", "존재하지 않는 사용자입니다"), // 404
     DUPLICATE_STUDENT_ID(HttpStatus.CONFLICT, "USER_409", "이미 가입된 학번입니다"), // 409
+    DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "USER_409", "이미 사용 중인 닉네임입니다"), // 409
     ;
 
     private final HttpStatus httpStatus;

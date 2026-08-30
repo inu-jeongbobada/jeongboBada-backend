@@ -6,7 +6,8 @@ import com.inu.jeongbobada.global.exception.code.BaseErrorCode;
 import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpStatus;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
+//null도 보여주기 위해서 일단 주석
+//@JsonInclude(JsonInclude.Include.NON_NULL)
 public record ApiResponse<T>(
         @JsonIgnore
         HttpStatus httpStatus,
@@ -24,6 +25,7 @@ public record ApiResponse<T>(
         return new ApiResponse<>(HttpStatus.CREATED, true, data, null, null);
     }
 
+    //지울 예정
     public static <T> ApiResponse<T> error(final HttpStatus httpStatus, final String message) {
         return new ApiResponse<>(httpStatus, false, null, null, message);
     }
