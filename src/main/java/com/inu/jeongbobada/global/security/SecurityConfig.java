@@ -38,6 +38,7 @@ public class SecurityConfig {
     }
 
     //DB에 저장할때 암호화 된 형태로 저장
+    //서비스에서 직접 생성하지 않아도 된다.
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
