@@ -1,10 +1,12 @@
 package com.inu.jeongbobada.global.exception;
 
+import com.inu.jeongbobada.domain.user.exception.UserErrorCode;
 import com.inu.jeongbobada.global.common.ApiResponse;
 import com.inu.jeongbobada.global.exception.code.GlobalErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -21,6 +23,16 @@ public class GlobalExceptionHandler {
         log.warn("BusinessException: {}", e.getMessage());
 
         ApiResponse<Void> response = ApiResponse.error(e.getErrorCode());
+        return ResponseEntity.status(response.httpStatus()).body(response);
+    }
+
+    // 학번이 없는 경우/비밀번호가 틀린 경우를 구분해서 응답하면
+    // 공격자가 "이 학번은 가입돼있다"를 알아낼 수 있어서(user enumeration) 메시지를 하나로 통일함
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ApiResponse<Void>> handleBadCredentialsException(BadCredentialsException e) {
+        log.warn("로그인 실패: {}", e.getMessage());
+
+        ApiResponse<Void> response = ApiResponse.error(UserErrorCode.INVALID_CREDENTIALS);
         return ResponseEntity.status(response.httpStatus()).body(response);
     }
 
@@ -76,4 +88,6 @@ public class GlobalExceptionHandler {
         ApiResponse<Void> response = ApiResponse.error(GlobalErrorCode.INTERNAL_SERVER_ERROR);
         return ResponseEntity.status(response.httpStatus()).body(response);
     }
+
+
 }
