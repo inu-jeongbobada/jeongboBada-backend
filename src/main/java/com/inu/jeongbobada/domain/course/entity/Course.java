@@ -55,7 +55,7 @@ public class Course {
 
     @Enumerated(EnumType.STRING)
     @Column(name ="IS_ONLINE",nullable = false)
-        private IsOnline isOnline;
+    private IsOnline isOnline;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "PROFESSOR_ID")
