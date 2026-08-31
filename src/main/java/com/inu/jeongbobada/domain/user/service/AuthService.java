@@ -19,10 +19,11 @@ public class AuthService {
 
     @Transactional
     public void signup (SignupRequest request) {
+        //학번 중복 확인
         if (userRepository.findByStudentId(request.studentId()).isPresent()) {
             throw new BusinessException(UserErrorCode.DUPLICATE_STUDENT_ID);
         }
-
+        //닉네임 중복확인
         if (userRepository.findByNickname(request.nickname()).isPresent()) {
             throw new BusinessException(UserErrorCode.DUPLICATE_NICKNAME);
         }
