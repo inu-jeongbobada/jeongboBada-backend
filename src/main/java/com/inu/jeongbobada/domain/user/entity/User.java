@@ -3,6 +3,7 @@ package com.inu.jeongbobada.domain.user.entity;
 import com.inu.jeongbobada.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -23,7 +24,7 @@ public class User extends BaseEntity {
     @Column(name = "PASSWORD", nullable = false)
     private String password;
 
-    @Column(name = "NICKNAME", nullable = false, unique = true, length = 50)
+    @Column(name = "NICKNAME", nullable = false, unique = true, length = 10)
     private String nickname;
 
     @Enumerated(EnumType.STRING)
@@ -33,11 +34,21 @@ public class User extends BaseEntity {
     @Column(name = "DEPARTMENT", length = 100)
     private String department;
 
-    public User(String studentId, String password, String nickname, UserRole userRole, String department) {
+    @Builder(access = AccessLevel.PRIVATE)
+    private User(String studentId, String password, String nickname, UserRole userRole, String department) {
         this.studentId = studentId;
         this.password = password;
         this.nickname = nickname;
         this.userRole = userRole;
         this.department = department;
+    }
+    public static User create(String studentId, String encodedPassword, String nickname, String department) {
+        return User.builder()
+            .studentId(studentId)
+            .password(encodedPassword)
+            .nickname(nickname)
+            .userRole(UserRole.USER)
+            .department(department)
+            .build();
     }
 }

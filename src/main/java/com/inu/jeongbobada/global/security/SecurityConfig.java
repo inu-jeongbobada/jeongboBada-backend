@@ -1,7 +1,10 @@
 package com.inu.jeongbobada.global.security;
 
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -12,6 +15,7 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
+@EnableConfigurationProperties(JwtProperties.class)
 public class SecurityConfig {
 
     private static final String[] PERMIT_ALL_PATHS = {
@@ -37,8 +41,19 @@ public class SecurityConfig {
         return http.build();
     }
 
+    //DB에 저장할때 암호화 된 형태로 저장
+    //서비스에서 직접 생성하지 않아도 된다.
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
+    // AuthService에서 로그인 시 학번/비밀번호 검증을 직접 짜지 않고 여기에 위임하기 위한 빈
+    // StudentUserDetailsService(UserDetailsService) + passwordEncoder 빈을 스프링이 알아서 엮어서 만들어줌
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+        return configuration.getAuthenticationManager();
+    }
+
+
 }
