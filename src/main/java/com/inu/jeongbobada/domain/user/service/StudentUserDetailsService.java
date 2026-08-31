@@ -18,7 +18,7 @@ public class StudentUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String studentId) {
         User user = userRepository.findByStudentId(studentId)
-            //아래 줄을 전역 예외처리로 해여할거 같은데
+            //Spring Security 전용 예외인 UsernameNotFoundException
             .orElseThrow(() -> new UsernameNotFoundException("존재하지 않는 학번입니다"));
 
         //DB 사용자를 Spring Security용 형식으로 번역한다? 정도로 이해
