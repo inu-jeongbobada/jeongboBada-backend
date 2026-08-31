@@ -42,6 +42,9 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-jeongbobada}
       # application.yml.example의 ddl-auto: update와 동일 (개발 편의용, 엔티티 변경사항을 기동 시 테이블에 자동 반영)
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      # data.sql이 Hibernate 테이블 생성 이후에 실행되도록 순서 보장 + MySQL에서도 data.sql 자동 실행
+      SPRING_JPA_DEFER_DATASOURCE_INITIALIZATION: "true"
+      SPRING_SQL_INIT_MODE: always
       # JWT 시크릿은 DB 비밀번호와 달리 기본값을 여기(커밋되는 파일)에 박아두지 않는다.
       # .env에 각자 채워 넣은 값을 그대로 주입 (.env.example 참고).
       JWT_SECRET: ${JWT_SECRET}
