@@ -6,6 +6,7 @@ import com.inu.jeongbobada.global.exception.code.BaseErrorCode;
 import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpStatus;
 
+//CI 설정을 해놓아서 이걸 없애면 CI 통과가 안된다. 나중에 생각
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record ApiResponse<T>(
         @JsonIgnore
