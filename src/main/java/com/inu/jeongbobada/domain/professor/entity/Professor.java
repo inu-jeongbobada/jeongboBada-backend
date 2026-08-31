@@ -26,7 +26,8 @@ public class Professor {
     @Column(name = "PROFESSOR_DETAIL", columnDefinition = "TEXT", nullable = false)
     private String professorDetail;
 
-    @Column(name = "PROFESSOR_IMAGE_URL", nullable = false)
+    // 아직 프로필 사진 데이터가 없어 nullable 허용 (없으면 프론트에서 기본 이미지로 대체)
+    @Column(name = "PROFESSOR_IMAGE_URL")
     private String professorImageUrl;
 
     // mappedBy -> 다른 DB 테이블에서 FK 관리
