@@ -5,6 +5,7 @@ import com.inu.jeongbobada.domain.professor.dto.ProfessorListResponseDto;
 import com.inu.jeongbobada.domain.professor.service.ProfessorService;
 import com.inu.jeongbobada.global.common.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -16,16 +17,20 @@ public class ProfessorController implements ProfessorControllerDocs {
     private final ProfessorService professorService;
 
     @Override
-    public ApiResponse<List<ProfessorListResponseDto>> getProfessorLists() {
+    public ResponseEntity<ApiResponse<List<ProfessorListResponseDto>>> getProfessorLists() {
         List<ProfessorListResponseDto> professorLists = professorService.readProfessorLists();
 
-        return ApiResponse.ok(professorLists);
+        ApiResponse<List<ProfessorListResponseDto>> apiResponse = ApiResponse.ok(professorLists);
+
+        return ResponseEntity.status(apiResponse.httpStatus()).body(apiResponse);
     }
 
     @Override
-    public ApiResponse<ProfessorDetailResponseDto> getProfessorDetail(@PathVariable Long professorId) {
+    public ResponseEntity<ApiResponse<ProfessorDetailResponseDto>> getProfessorDetail(@PathVariable Long professorId) {
         ProfessorDetailResponseDto professorDetail = professorService.readProfessorDetail(professorId);
 
-        return ApiResponse.ok(professorDetail);
+        ApiResponse<ProfessorDetailResponseDto> apiResponse = ApiResponse.ok(professorDetail);
+
+        return ResponseEntity.status(apiResponse.httpStatus()).body(apiResponse);
     }
 }
