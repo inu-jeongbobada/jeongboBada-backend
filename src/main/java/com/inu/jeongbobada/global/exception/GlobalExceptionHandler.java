@@ -9,6 +9,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -67,6 +68,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiResponse<Void>> handleMessageNotReadableException(HttpMessageNotReadableException e) {
         log.warn("잘못된 요청 바디: {}", e.getMessage());
+
+        ApiResponse<Void> response = ApiResponse.error(GlobalErrorCode.INVALID_INPUT_VALUE);
+        return ResponseEntity.status(response.httpStatus()).body(response);
+    }
+
+    // @RequestHeader로 필수 지정한 헤더가 아예 안 왔을 때 (예: Authorization 헤더 누락)
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMissingRequestHeaderException(MissingRequestHeaderException e) {
+        log.warn("필수 헤더 누락: {}", e.getHeaderName());
 
         ApiResponse<Void> response = ApiResponse.error(GlobalErrorCode.INVALID_INPUT_VALUE);
         return ResponseEntity.status(response.httpStatus()).body(response);

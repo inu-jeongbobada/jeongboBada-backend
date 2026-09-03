@@ -49,6 +49,7 @@ services:
       # .env에 각자 채워 넣은 값을 그대로 주입 (.env.example 참고).
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION: ${JWT_EXPIRATION:-3600000}
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION:-1209600000}
     ports:
       - "8080:8080"
 

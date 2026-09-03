@@ -14,12 +14,12 @@ Spring Security 필터 체인 구조상 거의 정형화된 패턴을 따른다.
 
 | 클래스 | 역할 |
 |---|---|
-| `SecurityConfig` | `SecurityFilterChain` 빈. 경로별 `permitAll`/인증 필요 설정, 세션 정책 `STATELESS`, 커스텀 필터 등록 |
-| `JwtTokenProvider` | 토큰 발급/파싱/검증. 시크릿 키·만료시간 관리 (`jjwt` 사용) |
-| `JwtAuthenticationFilter` | `OncePerRequestFilter`. 매 요청의 `Authorization` 헤더에서 토큰 추출·검증 후 `SecurityContext`에 인증 정보 저장 |
-| `CustomUserDetailsService` | `student_id`로 DB에서 `User` 조회 후 `UserDetails`로 변환 |
-| `JwtAuthenticationEntryPoint` | 인증 실패 시 로그인 페이지 리다이렉트 대신 401 JSON 응답 |
-| `AuthController` (user 도메인) | `/api/auth/signup`, `/api/auth/login` — 로그인 성공 시 토큰 발급 |
+| `SecurityConfig` | `SecurityFilterChain` 빈. 현재 `PERMIT_ALL_PATHS` 외 `anyRequest().permitAll()`로 전체 열어둔 상태 (커스텀 필터 미등록) |
+| `JwtTokenProvider` | 토큰 발급/파싱/검증 (`jjwt` 사용). `createAccessToken`/`createRefreshToken`/`validateToken`/`getStudentId` 구현 완료 |
+| `JwtAuthenticationFilter` | **미구현.** 매 요청의 `Authorization` 헤더에서 토큰 추출·검증 후 `SecurityContext`에 인증 정보 저장하는 역할 — 아직 없어서 access token이 실제 요청 인증엔 안 쓰이고 있음. `/reissue`, `/logout`에서 서비스가 토큰을 직접 파싱하는 임시 방식으로 우회 중 |
+| `StudentUserDetailsService` | (당초 `CustomUserDetailsService`로 계획했으나 실제 클래스명은 이것) `student_id`로 DB에서 `User` 조회 후 `UserDetails`로 변환. 구현 완료 |
+| `JwtAuthenticationEntryPoint` | **미구현.** 인증 실패 시 로그인 페이지 리다이렉트 대신 401 JSON 응답 |
+| `AuthController` (user 도메인) | `/api/auth/signup`, `/api/auth/login`, `/api/auth/reissue`, `/api/auth/logout` 구현 완료 |
 
 ## 시크릿 키 관리
 
@@ -42,29 +42,33 @@ Spring Security 필터 체인 구조상 거의 정형화된 패턴을 따른다.
 - [x] 세션·폼 로그인·HTTP Basic 비활성화
 
 ### 2. 회원가입 및 로그인
-- [ ] `User`의 `studentId`, `password`, `role` 확인
-- [ ] `UserRepository.findByStudentId`
-- [ ] `SignupRequest`
-- [ ] `LoginRequest`
-- [ ] `TokenResponse`
-- [ ] `CustomUserDetailsService`
-- [ ] 회원가입 시 BCrypt 암호화
-- [ ] `AuthenticationManager` 기반 로그인
+- [x] `User`의 `studentId`, `password`, `userRole` 확인
+- [x] `UserRepository.findByStudentId`
+- [x] `SignupRequest`
+- [x] `LoginRequest`
+- [x] `TokenResponse`
+- [x] `StudentUserDetailsService` (당초 계획명은 `CustomUserDetailsService`)
+- [x] 회원가입 시 BCrypt 암호화
+- [x] `AuthenticationManager` 기반 로그인
 
 ### 3. JWT 인증
-- [ ] `JwtProperties`
-- [ ] `JwtTokenProvider`
-- [ ] `JwtAuthenticationFilter`
-- [ ] `JwtAuthenticationEntryPoint`
-- [ ] `JwtAccessDeniedHandler`
-- [ ] `AuthController`
-- [ ] 정상·누락·변조·만료 토큰 테스트
+- [x] `JwtProperties`
+- [x] `JwtTokenProvider`
+- [ ] `JwtAuthenticationFilter` — 미구현. `SecurityConfig`가 전부 `permitAll`이라 access token이 실제 요청 인증에는 아직 안 쓰임
+- [ ] `JwtAuthenticationEntryPoint` — 미구현
+- [ ] `JwtAccessDeniedHandler` — 미구현
+- [x] `AuthController`
+- [ ] 정상·누락·변조·만료 토큰 테스트 — refresh token 쪽은 Postman으로 수동 확인 완료, access token 자동 테스트는 아직 없음
 
-### 4. 후속 작업
-- [ ] Refresh Token 저장 구조
-- [ ] `/api/auth/reissue`
-- [ ] `/api/auth/logout`
-- [ ] Refresh Token 해시 저장 및 회전
+### 4. 후속 작업 (Refresh Token) — [이슈 #55](https://github.com/inu-jeongbobada/jeongboBada-backend/issues/55)
+- [x] Refresh Token 저장 구조 — `User` 엔티티에 `refreshToken`/`refreshTokenExpiresAt` 컬럼 (별도 테이블/Redis 없음, 멀티 디바이스 요구사항 없어 오버엔지니어링으로 판단)
+- [x] `/api/auth/reissue`
+- [x] `/api/auth/logout`
+- [ ] Refresh Token 해시 저장 및 회전 — **회전(로그인/재발급마다 신규 발급)은 완료**, **해시 저장은 미완료**(현재 DB에 평문 저장, `studentId`처럼 응답 DTO 노출 금지 대상으로만 취급 중)
+
+### 5. 남은 인증 관련 갭
+- [ ] `JwtAuthenticationFilter` 부재로 보호가 필요한 엔드포인트(마이페이지 즐겨찾기 등)가 아직 없음 — 다음 엔드포인트가 필요해지는 시점에 필터부터 구현해야 함
+- [ ] Refresh Token DB 평문 저장 → 해시(예: SHA-256) 저장으로 전환 검토
 
 # 예상 브랜치
 - feat/security-config
