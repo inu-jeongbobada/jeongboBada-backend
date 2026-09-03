@@ -1,4 +1,8 @@
 package com.inu.jeongbobada.domain.user.dto;
 
-public class ReissueRequest {
+import jakarta.validation.constraints.NotBlank;
+
+public record ReissueRequest(
+    @NotBlank String refreshToken
+) {
 }
