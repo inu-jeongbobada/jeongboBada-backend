@@ -1,6 +1,6 @@
 package com.inu.jeongbobada.global.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.inu.jeongbobada.global.common.ApiResponse;
 import com.inu.jeongbobada.global.exception.code.GlobalErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
