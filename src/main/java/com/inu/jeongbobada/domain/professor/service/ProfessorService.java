@@ -2,12 +2,12 @@ package com.inu.jeongbobada.domain.professor.service;
 
 import com.inu.jeongbobada.domain.professor.dto.ProfessorDetailResponseDto;
 import com.inu.jeongbobada.domain.professor.dto.ProfessorListResponseDto;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 import com.inu.jeongbobada.domain.professor.entity.Professor;
 import com.inu.jeongbobada.domain.professor.exception.ProfessorErrorCode;
 import com.inu.jeongbobada.domain.professor.repository.ProfessorRepository;
 import com.inu.jeongbobada.global.exception.BusinessException;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
