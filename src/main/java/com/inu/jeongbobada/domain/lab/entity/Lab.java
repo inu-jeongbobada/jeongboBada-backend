@@ -23,13 +23,13 @@ public class Lab {
     @Column(name = "LAB_NAME", nullable = false, length = 100)
     private String labName;
 
-    @Column(name = "LAB_DETAIL", nullable = false)
+    @Column(name = "LAB_DETAIL", columnDefinition = "TEXT", nullable = false)
     private String labDetail;
 
     @Column(name = "LAB_URL", nullable = false)
     private String labUrl;
 
-    public Lab(Professor professor, String labName, String labDetail, String labUrl){
+    public Lab(Professor professor, String labName, String labDetail, String labUrl) {
         this.professor = professor;
         this.labName = labName;
         this.labDetail = labDetail;

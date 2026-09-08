@@ -10,6 +10,7 @@ public enum GlobalErrorCode implements BaseErrorCode {
     RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "COMMON_404", "요청하신 경로를 찾을 수 없습니다"), // 404
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "COMMON_405", "지원하지 않는 HTTP 메서드입니다"), // 405
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "COMMON_500", "서버 내부 오류가 발생했습니다"), // 500
+    UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "COMMON_401", "인증이 필요합니다"), // 401
     ;
 
     private final HttpStatus httpStatus;

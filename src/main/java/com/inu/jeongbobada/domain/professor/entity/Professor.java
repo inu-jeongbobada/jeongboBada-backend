@@ -1,5 +1,6 @@
 package com.inu.jeongbobada.domain.professor.entity;
 
+import com.inu.jeongbobada.domain.course.entity.Course;
 import com.inu.jeongbobada.domain.professorComment.entity.ProfessorComment;
 import com.inu.jeongbobada.domain.lab.entity.Lab;
 import jakarta.persistence.*;
@@ -22,10 +23,11 @@ public class Professor {
     @Column(name = "PROFESSOR_NAME", nullable = false, length = 20)
     private String professorName;
 
-    @Column(name = "PROFESSOR_DETAIL", nullable = false)
+    @Column(name = "PROFESSOR_DETAIL", columnDefinition = "TEXT", nullable = false)
     private String professorDetail;
 
-    @Column(name = "PROFESSOR_IMAGE_URL", nullable = false)
+    // 아직 프로필 사진 데이터가 없어 nullable 허용 (없으면 프론트에서 기본 이미지로 대체)
+    @Column(name = "PROFESSOR_IMAGE_URL")
     private String professorImageUrl;
 
     // mappedBy -> 다른 DB 테이블에서 FK 관리
@@ -35,6 +37,13 @@ public class Professor {
     @OneToMany(mappedBy = "professor", fetch = FetchType.LAZY)
     private List<ProfessorComment> professorComments;
 
-    // course 아직 작성 X
-    // course 작성 후 생성자 작성
+    @OneToMany(mappedBy = "professor", fetch = FetchType.LAZY)
+    private List<Course> courses;
+
+    public Professor(Long professorId, String professorName, String professorDetail, String professorImageUrl) {
+        this.professorId = professorId;
+        this.professorName = professorName;
+        this.professorDetail = professorDetail;
+        this.professorImageUrl = professorImageUrl;
+    }
 }

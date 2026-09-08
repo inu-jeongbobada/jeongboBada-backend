@@ -44,7 +44,13 @@ cp .env.example .env
 cp src/main/resources/application.yml.example src/main/resources/application.yml
 ```
 
-기본값 그대로면 위 Docker Compose 설정과 바로 맞습니다.
+DB 관련 값은 기본값 그대로 위 Docker Compose 설정과 바로 맞습니다.
+단, `jwt.secret`은 보안을 위해 예제 파일에 빈 값으로 되어 있으니, 복사한 `application.yml`에 각자 임의의 랜덤 문자열(32바이트 이상)을 채워 넣으세요. DB 비밀번호와 달리 팀원끼리 값을 맞출 필요는 없습니다 — 각자 로컬 서버 안에서만 토큰 서명/검증에 쓰이기 때문입니다.
+
+```bash
+# 랜덤 시크릿 생성 예시
+openssl rand -base64 48
+```
 
 ### 4. 애플리케이션 실행
 

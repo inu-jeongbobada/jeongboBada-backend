@@ -6,7 +6,6 @@ import com.inu.jeongbobada.domain.course.enums.Grade;
 import com.inu.jeongbobada.domain.course.enums.Semester;
 
 public record CourseListResDto(
-    Long courseId,
     String courseName,
     String professorName,
     Grade grade,
