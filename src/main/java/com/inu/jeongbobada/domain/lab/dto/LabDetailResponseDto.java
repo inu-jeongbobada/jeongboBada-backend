@@ -1,18 +1,25 @@
 package com.inu.jeongbobada.domain.lab.dto;
 
+import com.inu.jeongbobada.domain.lab.entity.Lab;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 
 @Getter
+@Builder
+@AllArgsConstructor
 public class LabDetailResponseDto {
     private Long labId;
     private String labName;
     private String labUrl;
     private String labDetail;
 
-    public LabDetailResponseDto(Long labId, String labName, String labUrl, String labDetail) {
-        this.labId = labId;
-        this.labName = labName;
-        this.labUrl = labUrl;
-        this.labDetail = labDetail;
+    public static LabDetailResponseDto from(Lab lab) {
+        return LabDetailResponseDto.builder()
+            .labId(lab.getLabId())
+            .labName(lab.getLabName())
+            .labUrl(lab.getLabUrl())
+            .labDetail(lab.getLabDetail())
+            .build();
     }
 }

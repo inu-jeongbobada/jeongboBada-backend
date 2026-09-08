@@ -1,19 +1,26 @@
 package com.inu.jeongbobada.domain.professor.dto;
 
 import com.inu.jeongbobada.domain.lab.dto.LabListResponseDto;
+import com.inu.jeongbobada.domain.professor.entity.Professor;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 
 @Getter
+@Builder
+@AllArgsConstructor
 public class ProfessorListResponseDto {
     private Long professorId;
     private String professorName;
     private String professorImageUrl;
     private LabListResponseDto labList;
 
-    public ProfessorListResponseDto(Long professorId, String professorName, String professorImageUrl, LabListResponseDto labList) {
-        this.professorId = professorId;
-        this.professorName = professorName;
-        this.professorImageUrl = professorImageUrl;
-        this.labList = labList;
+    public static ProfessorListResponseDto from(Professor professor) {
+        return ProfessorListResponseDto.builder()
+            .professorId(professor.getProfessorId())
+            .professorName(professor.getProfessorName())
+            .professorImageUrl(professor.getProfessorImageUrl())
+            .labList(LabListResponseDto.from(professor.getLab()))
+            .build();
     }
 }

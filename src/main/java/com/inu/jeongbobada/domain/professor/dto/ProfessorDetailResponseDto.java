@@ -1,12 +1,17 @@
 package com.inu.jeongbobada.domain.professor.dto;
 
 import com.inu.jeongbobada.domain.lab.dto.LabDetailResponseDto;
+import com.inu.jeongbobada.domain.professor.entity.Professor;
 import com.inu.jeongbobada.domain.professorComment.dto.ProfessorCommentDetailResponseDto;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 
 import java.util.List;
 
 @Getter
+@Builder
+@AllArgsConstructor
 public class ProfessorDetailResponseDto {
     private String professorName;
     private String professorImageUrl;
@@ -15,11 +20,15 @@ public class ProfessorDetailResponseDto {
     private LabDetailResponseDto labDetail;
     private List<ProfessorCommentDetailResponseDto> professorCommentDetails;
 
-    public ProfessorDetailResponseDto(String professorName, String professorImageUrl, String professorDetail, LabDetailResponseDto labDetail, List<ProfessorCommentDetailResponseDto> professorCommentDetails) {
-        this.professorName = professorName;
-        this.professorImageUrl = professorImageUrl;
-        this.professorDetail = professorDetail;
-        this.labDetail = labDetail;
-        this.professorCommentDetails = professorCommentDetails;
+    public static ProfessorDetailResponseDto from(Professor professor) {
+        return ProfessorDetailResponseDto.builder()
+            .professorName(professor.getProfessorName())
+            .professorImageUrl(professor.getProfessorImageUrl())
+            .professorDetail(professor.getProfessorDetail())
+            .labDetail(LabDetailResponseDto.from(professor.getLab()))
+            .professorCommentDetails(
+                professor.getProfessorComments().stream().map(ProfessorCommentDetailResponseDto::from).toList()
+            )
+            .build();
     }
 }
