@@ -2,6 +2,7 @@ package com.inu.jeongbobada.domain.user.service;
 
 import com.inu.jeongbobada.domain.user.entity.User;
 import com.inu.jeongbobada.domain.user.repository.UserRepository;
+import com.inu.jeongbobada.domain.user.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -22,10 +23,6 @@ public class StudentUserDetailsService implements UserDetailsService {
             .orElseThrow(() -> new UsernameNotFoundException("존재하지 않는 학번입니다"));
 
         //DB 사용자를 Spring Security용 형식으로 번역한다? 정도로 이해
-        return org.springframework.security.core.userdetails.User.builder()
-            .username(user.getStudentId())
-            .password(user.getPassword())
-            .authorities("ROLE_" + user.getUserRole().name())
-            .build();
+        return new CustomUserDetails(user);
     }
 }
