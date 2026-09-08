@@ -54,11 +54,10 @@ Spring Security 필터 체인 구조상 거의 정형화된 패턴을 따른다.
 ### 3. JWT 인증
 - [x] `JwtProperties`
 - [x] `JwtTokenProvider`
-- [ ] `JwtAuthenticationFilter` — 미구현. `SecurityConfig`가 전부 `permitAll`이라 access token이 실제 요청 인증에는 아직 안 쓰임
-- [ ] `JwtAuthenticationEntryPoint` — 미구현
-- [ ] `JwtAccessDeniedHandler` — 미구현
 - [x] `AuthController`
-- [ ] 정상·누락·변조·만료 토큰 테스트 — refresh token 쪽은 Postman으로 수동 확인 완료, access token 자동 테스트는 아직 없음
+- [ ] `JwtAuthenticationFilter` / `JwtAuthenticationEntryPoint` — 5번 섹션으로 이동
+- [ ] `JwtAccessDeniedHandler` — 6번 섹션으로 이동
+- [ ] 정상·누락·변조·만료 토큰 테스트 — 8번 섹션으로 이동
 
 ### 4. 후속 작업 (Refresh Token) — [이슈 #55](https://github.com/inu-jeongbobada/jeongboBada-backend/issues/55)
 - [x] Refresh Token 저장 구조 — `User` 엔티티에 `refreshToken`/`refreshTokenExpiresAt` 컬럼 (별도 테이블/Redis 없음, 멀티 디바이스 요구사항 없어 오버엔지니어링으로 판단)
@@ -66,12 +65,41 @@ Spring Security 필터 체인 구조상 거의 정형화된 패턴을 따른다.
 - [x] `/api/auth/logout`
 - [ ] Refresh Token 해시 저장 및 회전 — **회전(로그인/재발급마다 신규 발급)은 완료**, **해시 저장은 미완료**(현재 DB에 평문 저장, `studentId`처럼 응답 DTO 노출 금지 대상으로만 취급 중)
 
-### 5. 남은 인증 관련 갭
-- [ ] `JwtAuthenticationFilter` 부재로 보호가 필요한 엔드포인트(마이페이지 즐겨찾기 등)가 아직 없음 — 다음 엔드포인트가 필요해지는 시점에 필터부터 구현해야 함
+### 5. 인증 필터 (1순위 — 과목 후기 도메인이 대기 중)
+과목(course) 후기 컨트롤러에서 "로그인한 사용자만 접근 가능"이 필요해져서, 더는 미룰 수 없는 상태.
+- [ ] 커스텀 `UserDetails`(예: `CustomUserDetails`) — `StudentUserDetailsService.loadUserByUsername()`이
+      Spring 기본 `User`(username/password/authorities만 있음) 대신, `userId` 등 우리 도메인 정보를
+      담은 객체를 반환하도록 교체
+- [ ] `JwtAuthenticationFilter` — `OncePerRequestFilter`. 매 요청 `Authorization` 헤더에서 토큰
+      추출·검증 후 `SecurityContext`에 위 커스텀 `UserDetails` 채움
+- [ ] `JwtAuthenticationEntryPoint` — 인증 안 된 요청에 401 JSON 응답
+- [ ] `SecurityConfig`에 필터 등록, 인증 필요한 경로를 `permitAll` → `authenticated()`로 전환
+- [ ] 과목 후기 담당자에게 엔티티에 작성자 `user_id` 컬럼(FK) 먼저 넣어두라고 전달함 (필터 완성 전
+      선작업, 나중에 스키마 변경 없이 `@AuthenticationPrincipal`만 끼워넣을 수 있도록)
+
+### 6. 권한 관리 / 개인정보 수정 (기능 명세 반영, 2순위)
+- [ ] `JwtAccessDeniedHandler` — 권한 부족 요청에 403 JSON 응답
+- [ ] STUDENT/ADMIN 권한 구분 — `@PreAuthorize` 등으로 관리자 전용 API 제한 (5번 필터 완료 후 가능)
+- [ ] 개인정보 수정 API — 닉네임/비밀번호 변경
+
+### 7. 비밀번호 찾기 (학교 이메일 인증, 3순위)
+PASS 본인인증은 소모임 프로젝트 규모에 비해 비용·행정 부담이 커서 채택하지 않음.
+학번 기반 서비스 특성상 학교 이메일(`@inu.ac.kr`) 인증으로 대체하기로 결정.
+- [ ] `User` 엔티티에 학교 이메일 컬럼 추가 (회원가입 시 같이 받을지, 나중에 등록할지 결정 필요)
+- [ ] 이메일 발송 연동 (Spring Mail + SMTP)
+- [ ] 인증코드 생성/저장(TTL 있는 임시 저장) + 검증 API
+- [ ] 인증 성공 시 비밀번호 재설정 API
+
+### 8. 남은 갭 (우선순위 낮음)
 - [ ] Refresh Token DB 평문 저장 → 해시(예: SHA-256) 저장으로 전환 검토
+- [ ] 정상·누락·변조·만료 토큰 자동 테스트 코드 (지금은 Postman 수동 확인만 함)
 
 # 예상 브랜치
 - feat/security-config
 - feat/auth-login
 - feat/jwt-authentication
 - feat/refresh-token
+- feat/jwt-authentication-filter
+- feat/auth-authorization (권한 관리)
+- feat/user-profile-update (개인정보 수정)
+- feat/password-reset-email (비밀번호 찾기)
