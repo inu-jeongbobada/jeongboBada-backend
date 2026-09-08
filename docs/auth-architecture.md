@@ -14,11 +14,12 @@ Spring Security 필터 체인 구조상 거의 정형화된 패턴을 따른다.
 
 | 클래스 | 역할 |
 |---|---|
-| `SecurityConfig` | `SecurityFilterChain` 빈. 현재 `PERMIT_ALL_PATHS` 외 `anyRequest().permitAll()`로 전체 열어둔 상태 (커스텀 필터 미등록) |
+| `SecurityConfig` | `SecurityFilterChain` 빈. `JwtAuthenticationFilter`/`JwtAuthenticationEntryPoint` 등록 완료. 단, `PERMIT_ALL_PATHS` 외엔 아직 `anyRequest().permitAll()`이라 실제로 `authenticated()`로 막힌 경로는 없음 (아래 "실제 경로 제한은 누가 하나" 참고) |
 | `JwtTokenProvider` | 토큰 발급/파싱/검증 (`jjwt` 사용). `createAccessToken`/`createRefreshToken`/`validateToken`/`getStudentId` 구현 완료 |
-| `JwtAuthenticationFilter` | **미구현.** 매 요청의 `Authorization` 헤더에서 토큰 추출·검증 후 `SecurityContext`에 인증 정보 저장하는 역할 — 아직 없어서 access token이 실제 요청 인증엔 안 쓰이고 있음. `/reissue`, `/logout`에서 서비스가 토큰을 직접 파싱하는 임시 방식으로 우회 중 |
-| `StudentUserDetailsService` | (당초 `CustomUserDetailsService`로 계획했으나 실제 클래스명은 이것) `student_id`로 DB에서 `User` 조회 후 `UserDetails`로 변환. 구현 완료 |
-| `JwtAuthenticationEntryPoint` | **미구현.** 인증 실패 시 로그인 페이지 리다이렉트 대신 401 JSON 응답 |
+| `JwtAuthenticationFilter` | 구현 완료. 매 요청의 `Authorization` 헤더에서 토큰 추출·검증 후 `SecurityContext`에 `CustomUserDetails` 저장 |
+| `CustomUserDetails` | 구현 완료. `UserDetails` 구현체, `userId`/`nickname` 등 도메인 정보 보유 |
+| `StudentUserDetailsService` | (당초 `CustomUserDetailsService`로 계획했으나 실제 클래스명은 이것) `student_id`로 DB에서 `User` 조회 후 `CustomUserDetails`로 변환. 구현 완료 |
+| `JwtAuthenticationEntryPoint` | 구현 완료. 인증 실패 시 로그인 페이지 리다이렉트 대신 401 JSON 응답 (`GlobalErrorCode.UNAUTHORIZED`) |
 | `AuthController` (user 도메인) | `/api/auth/signup`, `/api/auth/login`, `/api/auth/reissue`, `/api/auth/logout` 구현 완료 |
 
 ## 시크릿 키 관리
