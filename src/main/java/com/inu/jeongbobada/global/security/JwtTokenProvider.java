@@ -1,5 +1,7 @@
 package com.inu.jeongbobada.global.security;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
@@ -21,14 +23,47 @@ public class JwtTokenProvider {
     }
 
     public String createAccessToken(String studentId) {
+        return createToken(studentId, jwtProperties.expiration());
+    }
+
+    public String createRefreshToken(String studentId) {
+        return createToken(studentId, jwtProperties.refreshExpiration());
+    }
+
+    private String createToken(String studentId, long expirationMs) {
         Date now = new Date();
-        Date expiry = new Date(now.getTime() + jwtProperties.expiration());
+        Date expiry = new Date(now.getTime() + expirationMs);
 
         return Jwts.builder()
-            .subject(studentId)        // 토큰의 주인이 누구인지 (나중에 파싱해서 studentId 꺼낼 때 씀)
+            .subject(studentId)
             .issuedAt(now)
             .expiration(expiry)
             .signWith(getSigningKey())
             .compact();
     }
+
+    //아래 두 메서드는 사실상 세트이다?
+    // 1. 정상토큰인지 확인
+    // 2. 학번 추출
+    // 서명/만료 검증. 위/변조되었거나 만료된 토큰이면 false
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parser().verifyWith(getSigningKey()).build().parseSignedClaims(token);
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    //쉽게 말하면 토큰의 주인을 찾는 메서드?
+    public String getStudentId(String token) {
+        Claims claims = Jwts.parser()
+            .verifyWith(getSigningKey())
+            .build()
+            .parseSignedClaims(token)
+            .getPayload();
+        return claims.getSubject();
+    }
+
+
 }
