@@ -18,7 +18,7 @@ public class ProfessorController implements ProfessorControllerDocs {
 
     @Override
     public ResponseEntity<ApiResponse<List<ProfessorListResponseDto>>> getProfessorLists() {
-        List<ProfessorListResponseDto> professorLists = professorService.readProfessorLists();
+        List<ProfessorListResponseDto> professorLists = professorService.getProfessorLists();
 
         ApiResponse<List<ProfessorListResponseDto>> apiResponse = ApiResponse.ok(professorLists);
 
@@ -27,7 +27,7 @@ public class ProfessorController implements ProfessorControllerDocs {
 
     @Override
     public ResponseEntity<ApiResponse<ProfessorDetailResponseDto>> getProfessorDetail(@PathVariable Long professorId) {
-        ProfessorDetailResponseDto professorDetail = professorService.readProfessorDetail(professorId);
+        ProfessorDetailResponseDto professorDetail = professorService.getProfessorDetail(professorId);
 
         ApiResponse<ProfessorDetailResponseDto> apiResponse = ApiResponse.ok(professorDetail);
 
