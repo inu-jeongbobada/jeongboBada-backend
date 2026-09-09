@@ -4,6 +4,7 @@ import com.inu.jeongbobada.domain.course.enums.*;
 import com.inu.jeongbobada.domain.professor.entity.Professor;
 
 public record CourseUpdateReqDto (
+    // 어드민 생성할시 사용
     String courseName,
     String professorName,
     String courseDetail,

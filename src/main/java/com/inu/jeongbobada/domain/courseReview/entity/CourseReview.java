@@ -21,6 +21,9 @@ import lombok.NoArgsConstructor;
         )
     }
 )
+
+
+
 public class CourseReview extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

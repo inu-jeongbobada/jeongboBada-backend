@@ -21,6 +21,7 @@ INSERT INTO professor (
 (8, '김경원', '무선통신, 무선채널, 무선네트워크', NULL);
 
 INSERT INTO course (
+
     course_name,
     course_code,
     professor_name,
