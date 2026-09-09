@@ -20,13 +20,13 @@ public class Lab {
     @JoinColumn(name = "PROFESSOR_ID", nullable = false)
     private Professor professor;
 
-    @Column(name = "LAB_NAME", nullable = false, length = 100)
+    @Column(name = "LAB_NAME", length = 100)
     private String labName;
 
-    @Column(name = "LAB_DETAIL", columnDefinition = "TEXT", nullable = false)
+    @Column(name = "LAB_DETAIL", columnDefinition = "TEXT")
     private String labDetail;
 
-    @Column(name = "LAB_URL", nullable = false)
+    @Column(name = "LAB_URL")
     private String labUrl;
 
     public Lab(Professor professor, String labName, String labDetail, String labUrl) {
