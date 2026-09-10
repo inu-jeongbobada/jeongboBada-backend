@@ -20,7 +20,7 @@ public class ProfessorListResponseDto {
             .professorId(professor.getProfessorId())
             .professorName(professor.getProfessorName())
             .professorImageUrl(professor.getProfessorImageUrl())
-            .labList(LabListResponseDto.from(professor.getLab()))
+            .labList(professor.getLab() != null ? LabListResponseDto.from(professor.getLab()) : null)
             .build();
     }
 }

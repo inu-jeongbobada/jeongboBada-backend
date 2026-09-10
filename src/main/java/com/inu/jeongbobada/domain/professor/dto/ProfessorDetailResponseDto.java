@@ -25,7 +25,7 @@ public class ProfessorDetailResponseDto {
             .professorName(professor.getProfessorName())
             .professorImageUrl(professor.getProfessorImageUrl())
             .professorDetail(professor.getProfessorDetail())
-            .labDetail(LabDetailResponseDto.from(professor.getLab()))
+            .labDetail(professor.getLab() != null ? LabDetailResponseDto.from(professor.getLab()) : null)
             .professorCommentDetails(
                 professor.getProfessorComments().stream().map(ProfessorCommentDetailResponseDto::from).toList()
             )
