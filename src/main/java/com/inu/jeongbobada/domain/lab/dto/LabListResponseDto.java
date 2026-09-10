@@ -14,6 +14,10 @@ public class LabListResponseDto {
     private String labUrl;
 
     public static LabListResponseDto from(Lab lab) {
+        if (lab == null) {
+            return null;
+        }
+
         return LabListResponseDto.builder()
             .labId(lab.getLabId())
             .labName(lab.getLabName())
