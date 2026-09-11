@@ -63,6 +63,7 @@ public class CourseReviewService {
         if (!courseRepository.existsById(courseId)) {
             throw new BusinessException(CourseException.COURSE_NOT_FOUND);
         }
+
         // 별점순 최신순 날짜순 으로 조회
         List<CourseReview> reviews = switch (sort) {
             case RECOMMENDED -> courseReviewRepository

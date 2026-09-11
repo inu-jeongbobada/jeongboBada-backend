@@ -30,6 +30,9 @@ public class CourseReview extends BaseEntity {
     @Column(name = "REVIEW_ID")
     private Long reviewId;
 
+    @Column(name = "LIKE_COUNT", nullable = false)
+    private long likeCount = 0L;
+
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "USER_ID", nullable = false)

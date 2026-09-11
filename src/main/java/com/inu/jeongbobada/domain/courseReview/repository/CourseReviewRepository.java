@@ -15,7 +15,7 @@ public interface CourseReviewRepository extends JpaRepository<CourseReview, Long
     //  추천 수가 같으면 작성일 후기 ID 내림차순으로 순서를 결정
     List<CourseReview> findAllByCourse_CourseIdOrderByLikeCountDescCreatedAtDescReviewIdDesc(Long courseId);
 
-    // 추가: 문자열로 저장된 별점을 숫자로 대응시켜 5점부터 1점 순으로 조회합니다.
+
     @Query("""
         select r from CourseReview r
         where r.course.courseId = :courseId
