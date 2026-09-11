@@ -41,10 +41,10 @@ public class CourseService {
     public CourseDetailResDto getCourse(Long courseId) {
 
         Course course = courseRepository.findById(courseId)
-            .orElseThrow(() -> new BusinessException(CourseException.COURSE_NOT_FOUND));
+            .orElseThrow(()-> new BusinessException(CourseException.COURSE_NOT_FOUND));
 
         return new CourseDetailResDto(
-
+            course.getCourseId(),
             course.getCourseName(),
             course.getProfessorName(),
             course.getCourseDetail(),

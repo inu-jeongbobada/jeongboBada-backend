@@ -5,6 +5,7 @@ import com.inu.jeongbobada.domain.professor.entity.Professor;
 
 public record CourseDetailResDto(
 
+    Long courseId,
     String courseName,
     String professorName,
     String courseDetail,
