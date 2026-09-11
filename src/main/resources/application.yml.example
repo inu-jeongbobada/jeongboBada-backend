@@ -26,3 +26,8 @@ jwt:
   secret:
   expiration: 3600000 # 1시간 (ms 단위)
   refresh-expiration: 1209600000 # 14일 (ms 단위)
+
+springdoc:
+  swagger-ui:
+    # Authorize 버튼에 넣은 토큰을 새로고침해도 유지 (매번 다시 넣는 거 방지)
+    persist-authorization: true
