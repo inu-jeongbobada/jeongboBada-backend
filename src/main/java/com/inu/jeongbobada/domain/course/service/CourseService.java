@@ -1,6 +1,7 @@
 package com.inu.jeongbobada.domain.course.service;
 import com.inu.jeongbobada.domain.course.dto.response.CourseDetailResDto;
 import com.inu.jeongbobada.domain.course.dto.response.CourseListResDto;
+import com.inu.jeongbobada.domain.course.dto.response.CourseProfessorResDto;
 import com.inu.jeongbobada.domain.course.entity.Course;
 import com.inu.jeongbobada.domain.course.exception.CourseException;
 import com.inu.jeongbobada.domain.course.repository.CourseRepository;
@@ -41,10 +42,10 @@ public class CourseService {
     public CourseDetailResDto getCourse(Long courseId) {
 
         Course course = courseRepository.findById(courseId)
-            .orElseThrow(() -> new BusinessException(CourseException.COURSE_NOT_FOUND));
+            .orElseThrow(()-> new BusinessException(CourseException.COURSE_NOT_FOUND));
 
         return new CourseDetailResDto(
-
+            course.getCourseId(),
             course.getCourseName(),
             course.getProfessorName(),
             course.getCourseDetail(),
@@ -54,7 +55,7 @@ public class CourseService {
             course.getCourseCode(),
             course.getCourseTime(),
             course.getCourseType(),
-            course.getProfessor(),
+            CourseProfessorResDto.from(course.getProfessor()),
             course.getEvaluationType(),
             course.getIsOnline()
         );

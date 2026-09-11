@@ -33,7 +33,7 @@
 | Method | Path | 설명 | Request | Response | 상태 |
 |---|---|---|---|---|---|
 | GET | /api/courses | 수업 목록 조회 | N/A | 200 <br/> [{ <br/> "courseName": "...", <br/> "professorName": "...", <br/> "grade": "FIRST\|SECOND\|THIRD\|FOURTH", <br/> "semester": "FIRST\|SECOND", <br/> "credits": "FIRST\|SECOND\|THIRD\|FOURTH", <br/> "courseCode": "...", <br/> "courseType": "MAJOR_CORE\|MAJOR_FOUNDATION\|MAJOR_ADVANCED" <br/>}] | 구현완료 |
-| GET | /api/courses/{courseId} | 수업 상세 조회 | N/A | 200 <br/> { <br/> "courseName": "...", <br/> "professorName": "...", <br/> "courseDetail": "...", <br/> "grade": "...", <br/> "semester": "...", <br/> "credits": "...", <br/> "courseCode": "...", <br/> "courseTime": "...", <br/> "courseType": "...", <br/> "professor": { ... Professor 엔티티 }, <br/> "evaluationType": "ABSOLUTE\|RELATIVE", <br/> "isOnline": "BLENDED_LEARNING\|ONLINE\|OFFLINE" <br/>} | 구현완료 |
+| GET | /api/courses/{courseId} | 수업 상세 조회 | N/A | 200 <br/> { <br/> "courseName": "...", <br/> "professorName": "...", <br/> "courseDetail": "...", <br/> "grade": "...", <br/> "semester": "...", <br/> "credits": "...", <br/> "courseCode": "...", <br/> "courseTime": "...", <br/> "courseType": "...", <br/> "professor": { <br/> "professorId": 0, <br/> "professorName": "...", <br/> "professorImageUrl": "https://..." <br/>}, <br/> "evaluationType": "ABSOLUTE\|RELATIVE", <br/> "isOnline": "BLENDED_LEARNING\|ONLINE\|OFFLINE" <br/>} | 구현완료 |
 | GET | /api/courses/{id}/reviews | 수업 후기 조회 (학점별 필터) | N/A | N/A | 미구현 |
 
 ## 4. 커뮤니티 (community)

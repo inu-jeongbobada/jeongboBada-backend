@@ -21,6 +21,7 @@ INSERT INTO professor (
 (8, '김경원', '무선통신, 무선채널, 무선네트워크', NULL);
 
 INSERT INTO course (
+    course_id,
     course_name,
     course_code,
     professor_name,
@@ -35,6 +36,7 @@ INSERT INTO course (
     evaluation_type
 ) VALUES
 (
+    1,
     '데이터베이스',
     'ITE-DEV-001',
     '우요섭',
@@ -49,6 +51,7 @@ INSERT INTO course (
     'RELATIVE'
 ),
 (
+    2,
     '인터넷프로그래밍',
     'ITE-DEV-002',
     '우요섭',
@@ -63,6 +66,7 @@ INSERT INTO course (
     'RELATIVE'
 ),
 (
+    3,
     '클라우드컴퓨팅',
     'ITE-DEV-003',
     '우요섭',
@@ -77,6 +81,7 @@ INSERT INTO course (
     'ABSOLUTE'
 ),
 (
+    4,
     '전기자기학',
     'ITE-DEV-004',
     '강승택',
@@ -91,6 +96,7 @@ INSERT INTO course (
     'RELATIVE'
 ),
 (
+    5,
     '안테나공학',
     'ITE-DEV-005',
     '강승택',
@@ -105,6 +111,7 @@ INSERT INTO course (
     'RELATIVE'
 ),
 (
+    6,
     '정보보안실습',
     'ITE-DEV-006',
     '이은규',
@@ -119,6 +126,7 @@ INSERT INTO course (
     'ABSOLUTE'
 ),
 (
+    7,
     '사물인터넷',
     'ITE-DEV-007',
     '이은규',
@@ -133,6 +141,7 @@ INSERT INTO course (
     'RELATIVE'
 ),
 (
+    8,
     '인공지능',
     'ITE-DEV-008',
     '조경훈',
@@ -147,6 +156,7 @@ INSERT INTO course (
     'RELATIVE'
 ),
 (
+    9,
     '운영체제',
     'ITE-DEV-009',
     '김영필',
@@ -161,6 +171,7 @@ INSERT INTO course (
     'RELATIVE'
 ),
 (
+    10,
     '임베디드컴퓨팅',
     'ITE-DEV-010',
     '김영필',
@@ -175,6 +186,7 @@ INSERT INTO course (
     'ABSOLUTE'
 ),
 (
+    11,
     '컴퓨터네트워크',
     'ITE-DEV-011',
     '김도엽',
@@ -189,6 +201,7 @@ INSERT INTO course (
     'RELATIVE'
 ),
 (
+    12,
     '디지털신호처리',
     'ITE-DEV-012',
     '김경원',
