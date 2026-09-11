@@ -55,9 +55,11 @@ public class CourseReviewController {
         @RequestParam(defaultValue = "LATEST") ReviewSort sort
     ) {
 
-        if (user == null) {
-            throw new BusinessException(GlobalErrorCode.UNAUTHORIZED);
-        }
+        // TODO: 후기 목록 조회(읽기)는 비로그인도 볼 수 있어야 해서 이 체크는 버그 (docs/bugs.md 참고).
+        // 원래 담당자 확인 후 정식으로 제거하기 전까지 임시로 주석 처리.
+        // if (user == null) {
+        //     throw new BusinessException(GlobalErrorCode.UNAUTHORIZED);
+        // }
 
 
         List<ReviewResDto> response = courseReviewService.getReviews(courseId, sort);
