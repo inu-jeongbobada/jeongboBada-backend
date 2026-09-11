@@ -1,7 +1,6 @@
 package com.inu.jeongbobada.domain.course.dto.response;
 
 import com.inu.jeongbobada.domain.course.enums.*;
-import com.inu.jeongbobada.domain.professor.entity.Professor;
 
 public record CourseDetailResDto(
 
@@ -15,7 +14,7 @@ public record CourseDetailResDto(
     String courseCode,
     String courseTime,
     CourseType courseType,
-    Professor professor,
+    CourseProfessorResDto professor,
     EvaluationType evaluationType,
     IsOnline isOnline
     // , ReviewSummaryResDto reviewSummarys
