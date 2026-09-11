@@ -1,6 +1,6 @@
 package com.inu.jeongbobada.domain.professor.entity;
 
-import com.inu.jeongbobada.domain.course.entity.Course;
+import com.inu.jeongbobada.domain.course.entity.CourseOffering;
 import com.inu.jeongbobada.domain.professorComment.entity.ProfessorComment;
 import com.inu.jeongbobada.domain.lab.entity.Lab;
 import jakarta.persistence.*;
@@ -38,7 +38,7 @@ public class Professor {
     private List<ProfessorComment> professorComments;
 
     @OneToMany(mappedBy = "professor", fetch = FetchType.LAZY)
-    private List<Course> courses;
+    private List<CourseOffering> courseOfferings;
 
     public Professor(Long professorId, String professorName, String professorDetail, String professorImageUrl) {
         this.professorId = professorId;

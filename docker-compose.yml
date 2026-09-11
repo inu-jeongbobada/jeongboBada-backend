@@ -50,6 +50,8 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION: ${JWT_EXPIRATION:-3600000}
       JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION:-1209600000}
+      # application.yml.example의 springdoc.swagger-ui.persist-authorization과 동일 (Swagger Authorize 토큰 유지)
+      SPRINGDOC_SWAGGER_UI_PERSIST_AUTHORIZATION: "true"
     ports:
       - "8080:8080"
 

@@ -4,10 +4,14 @@ import com.inu.jeongbobada.domain.courseReview.dto.request.ReviewCreateReqDto;
 import com.inu.jeongbobada.domain.courseReview.dto.response.ReviewResDto;
 import com.inu.jeongbobada.domain.course.entity.Course;
 import com.inu.jeongbobada.domain.course.exception.CourseException;
+import com.inu.jeongbobada.domain.course.repository.CourseOfferingRepository;
 import com.inu.jeongbobada.domain.course.repository.CourseRepository;
 import com.inu.jeongbobada.domain.courseReview.entity.CourseReview;
 import com.inu.jeongbobada.domain.courseReview.enums.ReviewSort;
 import com.inu.jeongbobada.domain.courseReview.repository.CourseReviewRepository;
+import com.inu.jeongbobada.domain.professor.entity.Professor;
+import com.inu.jeongbobada.domain.professor.exception.ProfessorErrorCode;
+import com.inu.jeongbobada.domain.professor.repository.ProfessorRepository;
 import com.inu.jeongbobada.domain.user.entity.User;
 import com.inu.jeongbobada.domain.user.exception.UserErrorCode;
 import com.inu.jeongbobada.domain.user.repository.UserRepository;
@@ -22,6 +26,8 @@ import java.util.List;
 public class CourseReviewService {
     private final CourseReviewRepository courseReviewRepository;
     private final CourseRepository courseRepository;
+    private final CourseOfferingRepository courseOfferingRepository;
+    private final ProfessorRepository professorRepository;
     private final UserRepository userRepository;
 
     @Transactional
@@ -34,10 +40,17 @@ public class CourseReviewService {
         Course course = courseRepository.findById(courseId)
             .orElseThrow(() -> new BusinessException(CourseException.COURSE_NOT_FOUND));
 
+        Professor professor = professorRepository.findById(request.professorId())
+            .orElseThrow(() -> new BusinessException(ProfessorErrorCode.PROFESSOR_NOT_FOUND));
+
+        // 이 교수가 실제로 이 과목을 개설한 적 있는지 확인 (엉뚱한 과목-교수 조합으로 후기가 달리는 것 방지)
+        courseOfferingRepository.findByCourse_CourseIdAndProfessor_ProfessorId(courseId, professor.getProfessorId())
+            .orElseThrow(() -> new BusinessException(CourseException.COURSE_OFFERING_NOT_FOUND));
 
         CourseReview review = new CourseReview(
             user,
             course,
+            professor,
             request.rating(),
             request.content(),
             request.textbook(),
