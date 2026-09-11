@@ -1,17 +1,12 @@
 package com.inu.jeongbobada.domain.course.entity;
 
-
-
-import com.inu.jeongbobada.domain.course.enums.*;
-import com.inu.jeongbobada.domain.professor.entity.Professor;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-
-
-
+// 학기가 바뀌어도 안 변하는 "과목 자체" 정보만 갖는다.
+// 담당 교수/시간표/학점 등 학기마다 바뀌는 정보는 CourseOffering에서 관리한다.
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -25,79 +20,37 @@ public class Course {
     @Column(name = "COURSE_NAME", nullable = false, length = 100)
     private String courseName;
 
-    @Column(name = "COURSE_CODE" , nullable = false, unique = true, length = 20 )
+    @Column(name = "COURSE_CODE", nullable = false, unique = true, length = 20)
     private String courseCode;
 
-    @Column(name = "PROFESSOR_NAME", nullable = false, length = 20)
-    private String professorName;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "GRADE",nullable = false)
-    private Grade grade;
-
-    @Column(name = "COURSE_TIME",nullable = false)
-    private String courseTime;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "SEMESTER",nullable = false)
-    private Semester semester;
-
-    @Column(name = "COURSE_DETAIL",columnDefinition = "TEXT", nullable = false)
+    @Column(name = "COURSE_DETAIL", columnDefinition = "TEXT", nullable = false)
     private String courseDetail;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "CREDITS",nullable = false)
-    private Credits credits;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "COURSE_TYPE",nullable = false)
-    private CourseType courseType;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name ="IS_ONLINE",nullable = false)
-    private IsOnline isOnline;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "PROFESSOR_ID")
-    private Professor professor;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "EVALUATION_TYPE",nullable = false)
-    private EvaluationType evaluationType;
-
-
-
+    // 이번 학기 시간표에 없으면 false로 내려놓고, DELETE는 하지 않는다 (후기가 courseId를 참조하고 있어서).
+    @Column(name = "ACTIVE", nullable = false)
+    private boolean active;
 
     public Course(
             String courseName,
-            String professorName,
-            String courseDetail,
-            Grade grade,
-            Semester semester,
-            Credits credits ,
             String courseCode,
-            String courseTime,
-            CourseType courseType,
-            Professor professor,
-            EvaluationType evaluationType,
-            IsOnline isOnline
-
+            String courseDetail
     ) {
         this.courseName = courseName;
-        this.professorName = professorName;
-        this.courseDetail = courseDetail;
-        this.grade = grade;
-        this.semester = semester;
-        this.credits = credits;
         this.courseCode = courseCode;
-        this.courseTime = courseTime;
-        this.courseType = courseType;
-        this.professor = professor;
-        this.evaluationType = evaluationType;
-        this.isOnline = isOnline;
-
+        this.courseDetail = courseDetail;
+        this.active = true;
     }
 
+    public void updateDetail(String courseName, String courseDetail) {
+        this.courseName = courseName;
+        this.courseDetail = courseDetail;
+    }
 
+    public void deactivate() {
+        this.active = false;
+    }
 
+    public void activate() {
+        this.active = true;
+    }
 }

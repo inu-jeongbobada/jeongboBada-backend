@@ -1,11 +1,13 @@
 package com.inu.jeongbobada.domain.courseReview.service;
 
 import com.inu.jeongbobada.domain.course.exception.CourseException;
+import com.inu.jeongbobada.domain.course.repository.CourseOfferingRepository;
 import com.inu.jeongbobada.domain.course.repository.CourseRepository;
 import com.inu.jeongbobada.domain.courseReview.entity.CourseReview;
 import com.inu.jeongbobada.domain.courseReview.enums.Rating;
 import com.inu.jeongbobada.domain.courseReview.enums.ReviewSort;
 import com.inu.jeongbobada.domain.courseReview.repository.CourseReviewRepository;
+import com.inu.jeongbobada.domain.professor.repository.ProfessorRepository;
 import com.inu.jeongbobada.domain.user.repository.UserRepository;
 import com.inu.jeongbobada.global.exception.BusinessException;
 import org.junit.jupiter.api.Test;
@@ -19,7 +21,7 @@ class CourseReviewSortTest {
     private final CourseReviewRepository reviews = mock(CourseReviewRepository.class);
     private final CourseRepository courses = mock(CourseRepository.class);
     private final CourseReviewService service = new CourseReviewService(
-        reviews, courses, mock(UserRepository.class));
+        reviews, courses, mock(CourseOfferingRepository.class), mock(ProfessorRepository.class), mock(UserRepository.class));
 
     // 각 선택이 해당 조회만 실행하고, Repository 결과의 순서를 그대로 보존하는지 확인합니다.
     @ParameterizedTest

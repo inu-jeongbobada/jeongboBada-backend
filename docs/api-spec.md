@@ -28,12 +28,14 @@
 | DELETE | /api/professors/{professorId}/professor-comments/{professorCommentId} | 교수 댓글 삭제 | N/A                                                                                                                  | { <br/> "message": "댓글 삭제가 완료되었습니다." <br/>}                                                                                                                                                                                                                                                                                                                                                                                                                                                    | 미구현 |
 
 ## 3. 전공 수업 (course)
-⚠️ 이 도메인은 `ApiResponse`로 안 감싸고 **DTO를 그대로** 응답한다 (인증 도메인과 포맷이 다름).
+다른 도메인과 동일하게 `ApiResponse`로 감싸서 응답한다.
+
+과목(Course, 학기 안 타는 정보)과 개설강의(CourseOffering, 학기별 정보)가 분리돼 있다. 자세한 배경은 [course-architecture.md](course-architecture.md) 참고.
 
 | Method | Path | 설명 | Request | Response | 상태 |
 |---|---|---|---|---|---|
-| GET | /api/courses | 수업 목록 조회 | N/A | 200 <br/> [{ <br/> "courseName": "...", <br/> "professorName": "...", <br/> "grade": "FIRST\|SECOND\|THIRD\|FOURTH", <br/> "semester": "FIRST\|SECOND", <br/> "credits": "FIRST\|SECOND\|THIRD\|FOURTH", <br/> "courseCode": "...", <br/> "courseType": "MAJOR_CORE\|MAJOR_FOUNDATION\|MAJOR_ADVANCED" <br/>}] | 구현완료 |
-| GET | /api/courses/{courseId} | 수업 상세 조회 | N/A | 200 <br/> { <br/> "courseName": "...", <br/> "professorName": "...", <br/> "courseDetail": "...", <br/> "grade": "...", <br/> "semester": "...", <br/> "credits": "...", <br/> "courseCode": "...", <br/> "courseTime": "...", <br/> "courseType": "...", <br/> "professor": { <br/> "professorId": 0, <br/> "professorName": "...", <br/> "professorImageUrl": "https://..." <br/>}, <br/> "evaluationType": "ABSOLUTE\|RELATIVE", <br/> "isOnline": "BLENDED_LEARNING\|ONLINE\|OFFLINE" <br/>} | 구현완료 |
+| GET | /api/courses | 수업 목록 조회 (이번 학기 개설 강의 기준) | N/A | 200 <br/> { "success": true, "data": [{ <br/> "courseId": 0, <br/> "courseName": "...", <br/> "professorName": "...", <br/> "grade": "FIRST\|SECOND\|THIRD\|FOURTH", <br/> "semester": "FIRST\|SECOND", <br/> "credits": "FIRST\|SECOND\|THIRD\|FOURTH", <br/> "courseCode": "...", <br/> "courseType": "MAJOR_CORE\|MAJOR_FOUNDATION\|MAJOR_ADVANCED" <br/>}] } | 구현완료 |
+| GET | /api/courses/{courseId} | 수업 상세 조회 | N/A | 200 <br/> { "success": true, "data": { <br/> "courseId": 0, <br/> "courseCode": "...", <br/> "courseName": "...", <br/> "courseDetail": "...", <br/> "offerings": [{ <br/> "courseOfferingId": 0, <br/> "professor": { "professorId": 0, "professorName": "...", "professorImageUrl": "https://..." }, <br/> "academicYear": 2026, <br/> "semester": "...", <br/> "grade": "...", <br/> "credits": "...", <br/> "courseTime": "...", <br/> "courseType": "...", <br/> "evaluationType": "ABSOLUTE\|RELATIVE", <br/> "isOnline": "BLENDED_LEARNING\|ONLINE\|OFFLINE" <br/>}] <br/>} } | 구현완료 |
 | GET | /api/courses/{id}/reviews | 수업 후기 조회 (학점별 필터) | N/A | N/A | 미구현 |
 
 ## 4. 커뮤니티 (community)
