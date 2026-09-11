@@ -5,6 +5,10 @@
 -- course = 학기가 바뀌어도 안 변하는 "과목 자체" (courseCode로 식별)
 -- course_offering = 특정 학년도/학기에 특정 교수가 개설한 강의 (학기마다 새로 들어오거나 갱신됨)
 
+-- course_review가 course/professor를 FK로 참조하므로 가장 먼저 지워야 한다
+-- (앱을 통해 리뷰를 하나라도 등록한 적이 있으면 course_review에 행이 남아있어서,
+--  이걸 안 지우고 course를 지우려 하면 FK 제약 위반으로 기동이 실패한다).
+DELETE FROM course_review;
 DELETE FROM course_offering;
 DELETE FROM course;
 DELETE FROM professor;
