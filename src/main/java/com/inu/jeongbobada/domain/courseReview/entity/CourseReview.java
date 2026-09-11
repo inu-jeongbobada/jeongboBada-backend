@@ -139,6 +139,3 @@ public class CourseReview extends BaseEntity {
         this.gradingType = gradingType;
     }
 }
-
-
-
