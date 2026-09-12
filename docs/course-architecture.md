@@ -69,6 +69,14 @@ CourseReview (기존 + professor 추가)
 - [ ] `CourseCreateReqDto`/`CourseUpdateReqDto` — 기존 flat 구조 그대로 남아있음(컨트롤러에 안 붙어있어서 컴파일은 됨). 관리자 등록 API를 실제로 만들 때 Course/CourseOffering 분리 구조에 맞게 다시 설계해야 함.
 - [ ] "이번 학기가 몇 학기인지" 판단 로직 — 지금은 `CourseOffering.active` 플래그를 수동/import 시점에 맞춰 관리한다고 가정. 별도의 "현재 학기" 개념(설정값 or Semester 테이블)은 아직 없음.
 - [ ] `GET /api/courses/{courseId}/reviews`의 불필요한 인증 체크 버그는 course 도메인이 아니라 course-review 쪽 이슈라 [docs/bugs.md](bugs.md)에 별도로 기록함.
+- [ ] **`data.sql` 시딩 전략은 실 서비스 전에 반드시 바꿔야 함.** 지금은 서버가 뜰 때마다
+      `course_review`/`course_offering`/`course`/`professor`를 통째로 DELETE 후 재삽입하는데
+      (개발 편의용), 이건 실제 유저가 작성한 `course_review`가 쌓인 뒤에 그대로 배포하면
+      재기동할 때마다 그 후기가 전부 날아간다. 후보:
+      1. `spring.sql.init.mode`를 프로필별로 분리(`local: always`, `prod: never`) — 가장 간단
+      2. Flyway/Liquibase 같은 버전 관리형 마이그레이션 도구로 교체 — 한 번 실행된 시딩은 재실행 안 됨
+      3. 교수/과목 데이터를 `data.sql` 대신 ADMIN 전용 API로 등록·관리 (6번 권한 관리 작업과 연결)
+      운영 배포를 준비하는 시점에 최소 1번은 반드시 적용할 것.
 
 ## 참고 파일
 
