@@ -1,23 +1,12 @@
 package com.inu.jeongbobada.domain.course.dto.response;
 
-import com.inu.jeongbobada.domain.course.enums.*;
-import com.inu.jeongbobada.domain.professor.entity.Professor;
+import java.util.List;
 
 public record CourseDetailResDto(
-
-    String courseName,
-    String professorName,
-    String courseDetail,
-    Grade grade,
-    Semester semester,
-    Credits credits ,
+    Long courseId,
     String courseCode,
-    String courseTime,
-    CourseType courseType,
-    Professor professor,
-    EvaluationType evaluationType,
-    IsOnline isOnline
-    // , ReviewSummaryResDto reviewSummarys
-
+    String courseName,
+    String courseDetail,
+    List<CourseOfferingResDto> offerings
 ) {
 }
