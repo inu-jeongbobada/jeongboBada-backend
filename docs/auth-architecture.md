@@ -92,9 +92,14 @@ Figma 화면 기준으로 "로그인 없이 보이는 화면(첫 페이지 등)"
       전환하는 건 각 도메인 PR에서 진행 — 위 "실제로 어느 경로를 막을지는 누가 정하나" 참고.
       지금은 배선만 끝났고 `anyRequest().permitAll()`이라 아직 아무 경로도 안 막혀있음
 
-### 6. 권한 관리 / 개인정보 수정 (기능 명세 반영, 2순위)
-- [ ] `JwtAccessDeniedHandler` — 권한 부족 요청에 403 JSON 응답
-- [ ] STUDENT/ADMIN 권한 구분 — `@PreAuthorize` 등으로 관리자 전용 API 제한 (5번 필터 완료 후 가능)
+### 6. 권한 관리 / 개인정보 수정 (기능 명세 반영, 2순위) — [이슈 #64](https://github.com/inu-jeongbobada/jeongboBada-backend/issues/64)
+- [x] `JwtAccessDeniedHandler` — 권한 부족 요청에 403 JSON 응답 (`GlobalErrorCode.FORBIDDEN` 추가)
+- [x] `@EnableMethodSecurity` 활성화 + `SecurityConfig`에 `accessDeniedHandler` 배선 —
+      `@PreAuthorize("hasRole('ADMIN')")`를 쓸 준비는 끝났고, `CustomUserDetails`가 이미
+      `ROLE_ADMIN`/`ROLE_USER` 권한을 부여하고 있어 추가 변경 없이 바로 동작함
+- [ ] **실제 관리자 전용 API 없음** — professor/course 컨트롤러가 전부 조회(GET)만 있어서
+      `@PreAuthorize`를 붙일 대상이 아직 없음. 관리자 전용 API(교수/과목 등록·수정 등)가
+      생기면 그 메서드에 애노테이션만 추가하면 됨
 - [ ] 개인정보 수정 API — 닉네임/비밀번호 변경
 
 ### 7. 비밀번호 찾기 (학교 이메일 인증, 3순위)
