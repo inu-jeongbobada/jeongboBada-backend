@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -16,6 +17,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity // @PreAuthorize("hasRole('ADMIN')") 등 메서드 단위 권한 검사 활성화
 @EnableConfigurationProperties(JwtProperties.class)
 public class SecurityConfig {
 
@@ -29,15 +31,20 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
             JwtAuthenticationFilter jwtAuthenticationFilter,
-            JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint
+            JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
+            JwtAccessDeniedHandler jwtAccessDeniedHandler
     ) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable) // stateless REST API라 CSRF 토큰 불필요
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
-                // 인증 안 된 요청이 인증 필요한 경로에 접근하면 이 EntryPoint가 401 JSON을 응답
-                .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))
+                .exceptionHandling(ex -> ex
+                        // 인증 안 된 요청이 인증 필요한 경로에 접근하면 이 EntryPoint가 401 JSON을 응답
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                        // 인증은 됐지만 권한(ADMIN 등)이 부족하면 이 핸들러가 403 JSON을 응답
+                        .accessDeniedHandler(jwtAccessDeniedHandler)
+                )
                 // 우리 필터를 Spring 기본 필터보다 먼저 실행 -> SecurityContext에 인증 정보를 먼저 채워둠
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth

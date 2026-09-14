@@ -5,7 +5,8 @@ import org.springframework.http.HttpStatus;
 
 public enum CourseException implements BaseErrorCode {
 
-    COURSE_NOT_FOUND("COURSE_4041", "과목을 찾을 수 없습니다.", HttpStatus.NOT_FOUND);
+    COURSE_NOT_FOUND("COURSE_4041", "과목을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    COURSE_OFFERING_NOT_FOUND("COURSE_4042", "해당 교수가 개설한 과목이 아닙니다.", HttpStatus.NOT_FOUND);
 
     private final String code;
     private final String message;
