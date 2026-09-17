@@ -65,6 +65,10 @@ public class User extends BaseEntity {
         this.refreshTokenExpiresAt = null;
     }
 
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
     public static User create(String studentId, String encodedPassword, String nickname, String department) {
         return User.builder()
             .studentId(studentId)
