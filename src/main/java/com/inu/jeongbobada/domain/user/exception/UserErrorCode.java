@@ -12,6 +12,7 @@ public enum UserErrorCode implements BaseErrorCode {
     DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "USER_409", "이미 사용 중인 닉네임입니다"), // 409
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "USER_401", "학번 또는 비밀번호가 일치하지 않습니다"), // 401
     INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "USER_401", "유효하지 않거나 만료된 Refresh Token입니다"), // 401
+    PASSWORD_MISMATCH(HttpStatus.UNAUTHORIZED, "USER_401", "현재 비밀번호가 일치하지 않습니다"), // 401
     ;
 
     private final HttpStatus httpStatus;

@@ -69,6 +69,10 @@ public class User extends BaseEntity {
         this.nickname = nickname;
     }
 
+    public void updatePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
+
     public static User create(String studentId, String encodedPassword, String nickname, String department) {
         return User.builder()
             .studentId(studentId)
