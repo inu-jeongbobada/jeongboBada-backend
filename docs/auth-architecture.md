@@ -22,6 +22,24 @@ Spring Security 필터 체인 구조상 거의 정형화된 패턴을 따른다.
 | `JwtAuthenticationEntryPoint` | 구현 완료. 인증 실패 시 로그인 페이지 리다이렉트 대신 401 JSON 응답 (`GlobalErrorCode.UNAUTHORIZED`) |
 | `AuthController` (user 도메인) | `/api/auth/signup`, `/api/auth/login`, `/api/auth/reissue`, `/api/auth/logout` 구현 완료 |
 
+## API 동작 규칙 (헷갈리기 쉬운 것 정리)
+
+나중에 "이거 어떻게 동작하기로 했더라?" 싶을 때 코드 안 뒤지고 여기부터 볼 것.
+
+| API | 로그인 필요? | 규칙 |
+|---|---|---|
+| `POST /api/auth/signup` | X | 학번/닉네임 중복 검사 후 BCrypt로 암호화해 저장 |
+| `POST /api/auth/login` | X | 학번+비밀번호를 `AuthenticationManager`에 위임해 검증. **학번이 없는 경우와 비밀번호가 틀린 경우를 구분하지 않고 둘 다 동일하게 401(`USER_401`)** — user enumeration(가입 여부 유추) 방지 목적, `GlobalExceptionHandler.handleBadCredentialsException` 참고 |
+| `POST /api/auth/reissue` | X (refresh token 자체가 인증 수단) | refresh token 서명·만료 검증 + **DB에 저장된 값과 문자열 일치**해야 통과 (탈취된 구 토큰 재사용 방지). 통과 시 access/refresh 둘 다 새로 발급(회전) |
+| `POST /api/auth/logout` | O (access token) | DB에 저장된 refresh token을 삭제만 함 — access token 자체를 서버가 강제로 만료시키는 건 아니라서, 이미 발급된 access token은 만료 시각까지는 계속 유효 |
+| `PATCH /api/users/me/nickname` | O | 닉네임 `unique` 제약 때문에 중복 검사하되, **본인 소유 닉네임이면 중복 에러 안 냄**(자기 자신으로의 "변경"은 통과) |
+| `PATCH /api/users/me/password` | O | **현재 비밀번호(`currentPassword`) 확인 필수** — 세션(access token) 탈취 상태에서 공격자가 비밀번호만 바꿔버리는 것 방지. 성공 시 **기존 refresh token 무효화**(`clearRefreshToken()`) → 다른 기기/세션은 재로그인 필요 |
+| 관리자 전용 API (아직 없음) | O + `ROLE_ADMIN` | `@PreAuthorize("hasRole('ADMIN')")` 사용. 권한 부족이면 403(`JwtAccessDeniedHandler`), 미인증이면 401(`JwtAuthenticationEntryPoint`) — 이 둘은 이미 배선 완료 |
+
+**민감정보 취급 원칙**
+- `studentId`(학번)는 로그인 식별자 전용 — 공개 응답 DTO에는 절대 노출하지 않고 `nickname`만 노출
+- `refreshToken`은 DB에 평문 저장 중(해시 전환은 [8번 섹션](#8-남은-갭-우선순위-낮음) 참고)이라 `studentId`와 동일하게 응답 DTO 노출 금지 대상으로 취급
+
 ## 시크릿 키 관리
 
 - DB 비밀번호와 동일한 패턴: `application.yml.example`에 `jwt.secret:` 빈 값으로 커밋, 각자 로컬 `application.yml`(gitignore 대상)에 실제 값 채움
@@ -100,7 +118,10 @@ Figma 화면 기준으로 "로그인 없이 보이는 화면(첫 페이지 등)"
 - [ ] **실제 관리자 전용 API 없음** — professor/course 컨트롤러가 전부 조회(GET)만 있어서
       `@PreAuthorize`를 붙일 대상이 아직 없음. 관리자 전용 API(교수/과목 등록·수정 등)가
       생기면 그 메서드에 애노테이션만 추가하면 됨
-- [ ] 개인정보 수정 API — 닉네임/비밀번호 변경
+- [x] 개인정보 수정 API — 닉네임/비밀번호 변경 ([이슈 #86](https://github.com/inu-jeongbobada/jeongboBada-backend/issues/86))
+      `UserController`/`UserService` 신설(`PATCH /api/users/me/nickname`, `PATCH /api/users/me/password`).
+      `SecurityConfig`에 `/api/users/me/**` `authenticated()` 추가. 비밀번호 변경 성공 시
+      `clearRefreshToken()`으로 기존 refresh token 무효화(재로그인 필요)하도록 결정
 
 ### 7. 비밀번호 찾기 (학교 이메일 인증, 3순위)
 PASS 본인인증은 소모임 프로젝트 규모에 비해 비용·행정 부담이 커서 채택하지 않음.
