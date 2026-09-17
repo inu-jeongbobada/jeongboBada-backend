@@ -1,4 +1,4 @@
-# 팀원은 Docker Desktop만 설치한 뒤 `docker compose up -d`로 동일한 MySQL 환경을 띄운다.
+# 팀원은 Docker Desktop만 설치한 뒤 `docker compose up -d`로 MySQL + 백엔드를 함께 띄운다.
 # CLAUDE.md 규칙: MySQL은 로컬에 직접 설치하지 않고 이 파일로만 실행한다.
 services:
   mysql:
@@ -24,6 +24,38 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jeongbobada-backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy # MySQL이 healthy 상태가 될 때까지 기동 대기
+    environment:
+      # application.yml은 .gitignore 대상이라 이미지에 없음 (CI와 동일하게 환경변수로 주입, relaxed binding).
+      # 컨테이너 안에서는 mysql 컨테이너를 서비스명(mysql)으로 찾아가야 하므로 localhost가 아님.
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-jeongbobada}
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-jeongbobada}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-jeongbobada}
+      # application.yml.example의 ddl-auto: update와 동일 (개발 편의용, 엔티티 변경사항을 기동 시 테이블에 자동 반영)
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      # data.sql이 Hibernate 테이블 생성 이후에 실행되도록 순서 보장 + MySQL에서도 data.sql 자동 실행
+      SPRING_JPA_DEFER_DATASOURCE_INITIALIZATION: "true"
+      SPRING_SQL_INIT_MODE: always
+      # application.yml.example의 spring.sql.init.encoding과 동일 (data.sql 한글 깨짐 방지)
+      SPRING_SQL_INIT_ENCODING: UTF-8
+      # JWT 시크릿은 DB 비밀번호와 달리 기본값을 여기(커밋되는 파일)에 박아두지 않는다.
+      # .env에 각자 채워 넣은 값을 그대로 주입 (.env.example 참고).
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-3600000}
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION:-1209600000}
+      # application.yml.example의 springdoc.swagger-ui.persist-authorization과 동일 (Swagger Authorize 토큰 유지)
+      SPRINGDOC_SWAGGER_UI_PERSIST_AUTHORIZATION: "true"
+    ports:
+      - "8080:8080"
 
 volumes:
   mysql_data:
