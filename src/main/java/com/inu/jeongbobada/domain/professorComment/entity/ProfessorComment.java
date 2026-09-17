@@ -4,6 +4,7 @@ import com.inu.jeongbobada.domain.professor.entity.Professor;
 import com.inu.jeongbobada.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
@@ -42,11 +43,28 @@ public class ProfessorComment {
     @Column(name = "PROFESSOR_COMMENT_ANONYMITY", nullable = false)
     private ProfessorCommentAnonymity professorCommentAnonymity;
 
-    public ProfessorComment(Professor professor, User user, String professorCommentDetail, int professorCommentRate, ProfessorCommentAnonymity professorCommentAnonymity) {
+    @Builder(access = AccessLevel.PROTECTED)
+    private ProfessorComment(Professor professor, User user, String professorCommentDetail, int professorCommentRate, ProfessorCommentAnonymity professorCommentAnonymity) {
         this.professor = professor;
         this.user = user;
         this.professorCommentDetail = professorCommentDetail;
         this.professorCommentRate = professorCommentRate;
+        this.professorCommentAnonymity = professorCommentAnonymity;
+    }
+
+    public static ProfessorComment create(Professor professor, User user, int professorCommentRate, String professorCommentDetail, ProfessorCommentAnonymity professorCommentAnonymity) {
+        return ProfessorComment.builder()
+            .professor(professor)
+            .user(user)
+            .professorCommentRate(professorCommentRate)
+            .professorCommentDetail(professorCommentDetail)
+            .professorCommentAnonymity(professorCommentAnonymity)
+            .build();
+    }
+
+    public void update(int professorCommentRate, String professorCommentDetail, ProfessorCommentAnonymity professorCommentAnonymity) {
+        this.professorCommentRate = professorCommentRate;
+        this.professorCommentDetail = professorCommentDetail;
         this.professorCommentAnonymity = professorCommentAnonymity;
     }
 }

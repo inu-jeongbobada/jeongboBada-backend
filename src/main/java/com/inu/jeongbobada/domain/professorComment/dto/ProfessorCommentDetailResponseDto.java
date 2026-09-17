@@ -1,6 +1,7 @@
 package com.inu.jeongbobada.domain.professorComment.dto;
 
 import com.inu.jeongbobada.domain.professorComment.entity.ProfessorComment;
+import com.inu.jeongbobada.domain.professorComment.entity.ProfessorCommentAnonymity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,7 +16,7 @@ public class ProfessorCommentDetailResponseDto {
     private String professorCommentDetail;
     private int professorCommentRate;
     private LocalDateTime professorCommentDate;
-    private String professorCommentAnonymity;
+    private ProfessorCommentAnonymity professorCommentAnonymity;
 
     public static ProfessorCommentDetailResponseDto from(ProfessorComment professorComment) {
         return ProfessorCommentDetailResponseDto.builder()
@@ -23,7 +24,7 @@ public class ProfessorCommentDetailResponseDto {
             .professorCommentDetail(professorComment.getProfessorCommentDetail())
             .professorCommentRate(professorComment.getProfessorCommentRate())
             .professorCommentDate(professorComment.getProfessorCommentDate())
-            .professorCommentAnonymity(professorComment.getProfessorCommentAnonymity().name())
+            .professorCommentAnonymity(professorComment.getProfessorCommentAnonymity())
             .build();
     }
 }
