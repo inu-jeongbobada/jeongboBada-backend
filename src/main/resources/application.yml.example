@@ -9,6 +9,19 @@ spring:
     url: jdbc:mysql://localhost:3306/jeongbobada
     username:
     password:
+  # 비밀번호 찾기 / 이메일 변경 인증코드 발송용 SMTP. username/password를 비워두면 앱은 뜨지만 메일 발송만 실패한다.
+  # Gmail을 쓴다면 password에는 계정 비밀번호가 아니라 "앱 비밀번호"(2단계 인증 켠 뒤 발급)를 넣어야 한다.
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username:
+    password:
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
   jpa:
     hibernate:
       # update: 엔티티 변경사항을 기동 시 테이블에 자동 반영 (개발 편의용, 운영에서는 지양)

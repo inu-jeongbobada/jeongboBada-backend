@@ -13,6 +13,12 @@ public enum UserErrorCode implements BaseErrorCode {
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "USER_401", "학번 또는 비밀번호가 일치하지 않습니다"), // 401
     INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "USER_401", "유효하지 않거나 만료된 Refresh Token입니다"), // 401
     PASSWORD_MISMATCH(HttpStatus.UNAUTHORIZED, "USER_401", "현재 비밀번호가 일치하지 않습니다"), // 401
+    DUPLICATE_EMAIL(HttpStatus.CONFLICT, "USER_409", "이미 사용 중인 이메일입니다"), // 409
+    // 코드가 틀렸는지/만료됐는지/애초에 없는지를 구분해서 알려주지 않는다 (추측 공격에 힌트를 주지 않기 위함)
+    INVALID_VERIFICATION_CODE(HttpStatus.BAD_REQUEST, "USER_400", "인증코드가 올바르지 않거나 만료되었습니다"), // 400
+    SAME_EMAIL(HttpStatus.BAD_REQUEST, "USER_400", "현재 사용 중인 이메일과 동일합니다"), // 400
+    CODE_RESEND_TOO_FAST(HttpStatus.TOO_MANY_REQUESTS, "USER_429", "인증코드는 잠시 후 다시 요청할 수 있습니다"), // 429
+    EMAIL_SEND_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "USER_503", "이메일 발송에 실패했습니다. 잠시 후 다시 시도해주세요"), // 503
     ;
 
     private final HttpStatus httpStatus;
