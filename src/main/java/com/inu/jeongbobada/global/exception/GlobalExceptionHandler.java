@@ -3,6 +3,7 @@ package com.inu.jeongbobada.global.exception;
 import com.inu.jeongbobada.domain.user.exception.UserErrorCode;
 import com.inu.jeongbobada.global.common.ApiResponse;
 import com.inu.jeongbobada.global.exception.code.GlobalErrorCode;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -43,6 +44,18 @@ public class GlobalExceptionHandler {
         String message = e.getBindingResult().getFieldErrors().stream()
                 .findFirst()
                 .map(fieldError -> fieldError.getDefaultMessage())
+                .orElse(GlobalErrorCode.INVALID_INPUT_VALUE.getMessage());
+
+        ApiResponse<Void> response = ApiResponse.error(GlobalErrorCode.INVALID_INPUT_VALUE, message);
+        return ResponseEntity.status(response.httpStatus()).body(response);
+    }
+
+    // 엔티티 저장 시점의 Bean Validation 실패도 잘못된 입력값(400)으로 응답한다.
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleConstraintViolationException(ConstraintViolationException e) {
+        String message = e.getConstraintViolations().stream()
+                .findFirst()
+                .map(violation -> violation.getMessage())
                 .orElse(GlobalErrorCode.INVALID_INPUT_VALUE.getMessage());
 
         ApiResponse<Void> response = ApiResponse.error(GlobalErrorCode.INVALID_INPUT_VALUE, message);
