@@ -36,7 +36,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 //  - Embedded 인증코드가 저장/조회/폐기(null)되는가
 //  - SecurityConfig 경로 규칙 (/api/auth/** 공개, /api/users/me/** 인증 필요)
 // 테스트는 트랜잭션으로 감싸지 않고, 만든 사용자는 끝나고 직접 지운다.
-@SpringBootTest
+// CI는 application.yml 없이 datasource 환경변수만 주입하고 ddl-auto를 따로 주지 않는다 (MySQL 기본값은 none).
+// 그러면 빈 DB에 테이블이 없어서 이 테스트가 실패하므로, 테이블을 스스로 만들도록 여기서 지정한다.
+// (기존 contextLoads 테스트는 테이블에 접근하지 않아서 이 설정 없이도 통과했다.)
+@SpringBootTest(properties = "spring.jpa.hibernate.ddl-auto=update")
 @AutoConfigureMockMvc
 class PasswordResetIntegrationTest {
 
