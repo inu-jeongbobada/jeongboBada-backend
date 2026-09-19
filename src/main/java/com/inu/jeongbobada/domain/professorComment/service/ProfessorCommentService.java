@@ -23,7 +23,7 @@ public class ProfessorCommentService {
     private final UserRepository userRepository;
 
     @Transactional
-    public void createProfessorComment(Long professorId, Long userId, ProfessorCommentCreateRequestDto professorCommentCreateRequestDto) {
+    public void createProfessorComment(Long userId, Long professorId, ProfessorCommentCreateRequestDto professorCommentCreateRequestDto) {
         Professor professor = professorRepository.findByProfessorId(professorId)
             .orElseThrow(() -> new BusinessException(ProfessorErrorCode.PROFESSOR_NOT_FOUND));
         User user = userRepository.getReferenceById(userId);
