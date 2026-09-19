@@ -17,7 +17,7 @@
 - 패키지는 계층별이 아니라 **도메인(기능)별**로 나눈다.
 
 ## 설정값(application.yml) 추가/변경 시 체크리스트
-새 설정값(`jwt.*` 같은)을 추가하거나 값을 바꿀 때, 아래 4곳을 세트로 확인한다.
+새 설정값(`jwt.*` 같은)을 추가하거나 값을 바꿀 때, 아래 4곳(+ 통합 테스트가 그 값을 쓰면 1곳)을 세트로 확인한다.
 로컬 IDE 실행(`application.yml`)과 `docker compose up`으로 백엔드 컨테이너까지 띄우는 경로가
 설정을 주입받는 방식이 완전히 달라서(전자는 파일, 후자는 환경변수), 하나만 고치면
 Docker 경로에서 컨테이너가 기동 실패한다.
@@ -26,8 +26,34 @@ Docker 경로에서 컨테이너가 기동 실패한다.
 - [ ] `application.yml.example` (템플릿, 커밋 대상 — 값은 비워두거나 예시로)
 - [ ] `docker-compose.yml`의 `backend.environment` (컨테이너 실행용 env 주입, `${VAR:-기본값}` 형태 권장)
 - [ ] `.env` / `.env.example` (`docker-compose.yml`이 참조하는 env 값)
+- [ ] `src/test/resources/application-test.properties` (**통합 테스트가 그 값을 필요로 할 때만**, 테스트 전용 가짜 값.
+      CI에는 `application.yml`이 없어서 여기 없으면 "로컬은 통과, CI만 실패"한다.
+      확장자는 `.properties`로 고정 — `.yml`로 만들면 `.gitignore`의 `application-*.yml`에 걸려 커밋에서 조용히 빠진다)
 
-작업을 마치기 전에 이 체크리스트를 훑어보고, 새로 추가한 설정값이 4곳 다 반영됐는지 확인할 것.
+작업을 마치기 전에 이 체크리스트를 훑어보고, 새로 추가한 설정값이 위 곳들에 다 반영됐는지 확인할 것.
+
+## 테스트 작성 기준
+**"DB가 실제로 있어야 답이 나오는 것"이면 통합 테스트, 순수 로직이면 단위 테스트**로 나눈다.
+
+| 확인하려는 것 | 테스트 |
+|---|---|
+| 계산·정렬·조건 분기 같은 순수 로직 | 단위 테스트 (DB 불필요, 예: `CourseReviewSortTest`) |
+| 쿼리 결과, UNIQUE/FK 제약, 트랜잭션 저장/롤백 | 통합 테스트 |
+| 에러가 올바른 응답 코드(400/401/403 등)로 나가는지, 로그인 필요/권한 경로 | 통합 테스트 |
+| 화면·문구 | 수동 확인 |
+
+PR에 아래 중 하나라도 있으면 **통합 테스트를 1개 이상** 붙인다. 새 API는 "성공 1개 + 대표 실패 1개"면 충분하다.
+1. 새 DB 쿼리(Repository 메서드)를 추가했다
+2. UNIQUE·FK·삭제 관련 동작을 다룬다
+3. 트랜잭션 저장/롤백이 결과에 영향을 준다
+4. 로그인이 필요한 새 API를 추가했다
+
+통합 테스트 작성 방법 (예: `PasswordResetIntegrationTest`):
+- `@SpringBootTest` + `@ActiveProfiles("test")` — 필요한 설정은 `application-test.properties`에서 받는다
+- 실제 MySQL(docker)을 쓰고, 테스트가 만든 데이터는 끝나고 직접 지운다
+- 메일 발송 같은 외부 호출은 `@MockitoBean`으로 대체한다
+- **로컬에서 통과했다고 끝내지 말 것.** 로컬은 각자의 `application.yml`이 있어서 CI와 조건이 다르다. 설정 파일이 없는 깨끗한
+  복제본에서 CI와 같이 환경변수 3개(`SPRING_DATASOURCE_URL/USERNAME/PASSWORD`)만 주고 `./gradlew build`가 통과하는지 확인한다.
 
 ## 도메인 아키텍처 문서화 규칙
 어떤 도메인에 `docs/{도메인}-architecture.md`(예: `docs/auth-architecture.md`)가 있다면,
