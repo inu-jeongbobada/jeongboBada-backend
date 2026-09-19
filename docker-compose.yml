@@ -52,6 +52,15 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION: ${JWT_EXPIRATION:-3600000}
       JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION:-1209600000}
+      # application.yml.example의 spring.mail.*과 동일 (비밀번호 찾기/이메일 변경 인증코드 발송용 SMTP).
+      # 계정/비밀번호는 JWT_SECRET처럼 커밋되는 파일에 기본값을 두지 않고 .env로만 주입한다.
+      # 비워두면 backend는 정상 기동하고, 메일 발송만 실패한다 (.env.example 참고).
+      SPRING_MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+      SPRING_MAIL_PORT: ${MAIL_PORT:-587}
+      SPRING_MAIL_USERNAME: ${MAIL_USERNAME:-}
+      SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "true"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "true"
       # application.yml.example의 springdoc.swagger-ui.persist-authorization과 동일 (Swagger Authorize 토큰 유지)
       SPRINGDOC_SWAGGER_UI_PERSIST_AUTHORIZATION: "true"
     ports:

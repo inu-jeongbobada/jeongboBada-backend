@@ -41,6 +41,11 @@ public class AuthService {
         if (userRepository.findByNickname(request.nickname()).isPresent()) {
             throw new BusinessException(UserErrorCode.DUPLICATE_NICKNAME);
         }
+        //이메일 중복확인 (비밀번호 찾기에서 이메일로 계정을 특정하므로 unique)
+        String email = EmailNormalizer.normalize(request.email());
+        if (userRepository.findByEmail(email).isPresent()) {
+            throw new BusinessException(UserErrorCode.DUPLICATE_EMAIL);
+        }
         //DB에 저장할때 해쉬값으로 바꿔서 저장
         String encodedPassword = passwordEncoder.encode(request.password());
 
@@ -48,7 +53,8 @@ public class AuthService {
             request.studentId(),
             encodedPassword,
             request.nickname(),
-            null // department: 회원가입 요청에 아직 없는 값이라 일단 null
+            null, // department: 회원가입 요청에 아직 없는 값이라 일단 null
+            email
         );
 
         userRepository.save(user);
