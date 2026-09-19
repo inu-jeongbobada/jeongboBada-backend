@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -36,17 +37,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 //  - Embedded 인증코드가 저장/조회/폐기(null)되는가
 //  - SecurityConfig 경로 규칙 (/api/auth/** 공개, /api/users/me/** 인증 필요)
 // 테스트는 트랜잭션으로 감싸지 않고, 만든 사용자는 끝나고 직접 지운다.
-// 이 테스트는 개발자 로컬의 application.yml에 기대지 않고 필요한 설정을 스스로 지정한다.
-// CI는 application.yml 없이 datasource 환경변수 3개만 주입하기 때문에, 아래가 없으면 로컬에서는 통과하고 CI에서만 실패한다.
-//  - ddl-auto: MySQL 기본값이 none이라 빈 DB에 테이블이 안 만들어짐 (Table 'users' doesn't exist)
-//  - jwt.*: 로그인(토큰 발급)에 필요한 secret이 null이라 NPE (테스트 전용 값이며 실제 시크릿 아님)
-// (기존 contextLoads 테스트는 테이블/토큰을 쓰지 않아서 이 설정 없이도 통과했다.)
-@SpringBootTest(properties = {
-    "spring.jpa.hibernate.ddl-auto=update",
-    "jwt.secret=integration-test-only-secret-key-that-is-at-least-32-bytes-long",
-    "jwt.expiration=3600000",
-    "jwt.refresh-expiration=1209600000"
-})
+// 필요한 설정(ddl-auto, 테스트 전용 jwt.*)은 개발자 로컬의 application.yml이 아니라
+// src/test/resources/application-test.properties에서 받는다. 프로필을 빼면 CI(설정 파일 없음)에서 실패한다.
+@SpringBootTest
+@ActiveProfiles("test")
 @AutoConfigureMockMvc
 class PasswordResetIntegrationTest {
 
