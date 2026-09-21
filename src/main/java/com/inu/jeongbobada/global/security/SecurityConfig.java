@@ -50,6 +50,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PERMIT_ALL_PATHS).permitAll()
                         .requestMatchers("/api/users/me/**").authenticated()
+                        .requestMatchers("/api/professors/*/professor-comments/**").authenticated()
                         // TODO: 그 외 인증이 필요한 경로(마이페이지 즐겨찾기 등)가 생기면
                         // 그 경로를 여기 authenticated()로 먼저 추가한 뒤 아래 anyRequest()보다 앞에 둘 것.
                         .anyRequest().permitAll()
