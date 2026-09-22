@@ -8,6 +8,7 @@
 
 | Method | Path | 설명 | Request | Response | 상태 |
 |---|---|---|---|---|---|
+| GET | /api/auth/check-nickname?nickname= | 회원가입 폼에서 닉네임 사용 가능 여부 실시간 확인 | Query: <br/> `nickname` | 200 <br/> { "success": true, "data": { "available": true } } | 구현완료 |
 | POST | /api/auth/signup | 회원가입 (학번 기반) | { <br/> "studentId": "202012345", <br/> "password": "영문+숫자 8~64자", <br/> "nickname": "한글/영문/숫자/-/_  2~10자", <br/> "email": "user@example.com" <br/>} | 201 <br/> { "success": true, "data": null } | 구현완료 |
 | POST | /api/auth/login | 로그인 (JWT 발급) | { <br/> "studentId": "202012345", <br/> "password": "..." <br/>} | 200 <br/> { "success": true, "data": { <br/> "accessToken": "eyJ...", <br/> "refreshToken": "eyJ..." <br/>} } | 구현완료 |
 | POST | /api/auth/reissue | Access Token 재발급 | { <br/> "refreshToken": "eyJ..." <br/>} | 200 <br/> { "success": true, "data": { <br/> "accessToken": "eyJ...", <br/> "refreshToken": "eyJ..." <br/>} } | 구현완료 |
@@ -18,6 +19,7 @@
 | POST | /api/users/me/email/send-code | 이메일 등록/변경 ① 새 이메일로 인증코드 발송 (로그인 필요) | Header: <br/> `Authorization: Bearer {accessToken}` <br/> { <br/> "newEmail": "new@example.com" <br/>} | 200 <br/> { "success": true, "data": null } | 구현완료 |
 | PATCH | /api/users/me/email | 이메일 등록/변경 ② 코드+현재 비밀번호 확인 후 변경 (로그인 필요) | Header: <br/> `Authorization: Bearer {accessToken}` <br/> { <br/> "newEmail": "new@example.com", <br/> "code": "숫자 6자리", <br/> "currentPassword": "..." <br/>} | 200 <br/> { "success": true, "data": null } | 구현완료 |
 
+- 닉네임 중복확인은 **닉네임만 제공**한다. 학번/이메일 중복확인은 제공하지 않음 (이 학번/이메일로 가입돼 있다는 걸 누구나 조회할 수 있게 되는 user enumeration 방지) — 가입 시도 시 409로만 안내. 확인 시점과 실제 가입 시점 사이에 다른 사람이 선점할 수 있어 최종 검증은 `signup`에서 다시 함
 - 회원가입에 `email`이 **필수**로 추가됨 (비밀번호 찾기용). 이미 가입된 이메일이면 409. 대소문자/앞뒤 공백은 무시하고 비교
 - 비밀번호 찾기: `send-code`는 **학번이 없거나 이메일이 달라도, 메일 발송이 실패해도 항상 같은 200** (가입 여부 노출 방지). 인증코드는 6자리, 5분 유효, 재발송은 60초 뒤부터
 - 비밀번호 찾기: 서버는 `verify-code` 통과를 기억하지 않는다 — 화면에서 다음 단계로 넘어가는 용도이고, 재설정 요청(`/api/auth/password-reset`)에도 **같은 `code`를 다시 보내야** 한다

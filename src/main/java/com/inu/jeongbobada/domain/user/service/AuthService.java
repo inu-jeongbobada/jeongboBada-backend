@@ -1,6 +1,7 @@
 package com.inu.jeongbobada.domain.user.service;
 
 import com.inu.jeongbobada.domain.user.dto.LoginRequest;
+import com.inu.jeongbobada.domain.user.dto.NicknameCheckResponse;
 import com.inu.jeongbobada.domain.user.dto.ReissueRequest;
 import com.inu.jeongbobada.domain.user.dto.SignupRequest;
 import com.inu.jeongbobada.domain.user.dto.TokenResponse;
@@ -59,6 +60,12 @@ public class AuthService {
 
         userRepository.save(user);
 
+    }
+
+    // 가입 폼에서 제출 전 미리 확인하는 용도. 최종 중복 검사는 signup()에서 다시 함(여기서 통과해도 그 사이 다른 사람이 선점할 수 있음)
+    @Transactional(readOnly = true)
+    public NicknameCheckResponse checkNicknameAvailability(String nickname) {
+        return new NicknameCheckResponse(!userRepository.existsByNickname(nickname));
     }
 
     // 학번+비밀번호 검증(AuthenticationManager에 위임) 통과하면 access/refresh 토큰 새로 발급
