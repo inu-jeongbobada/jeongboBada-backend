@@ -10,6 +10,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -99,6 +100,27 @@ class JwtAuthenticationFilterTest {
         assertThat(authentication).isNotNull();
         assertThat(authentication.getPrincipal()).isEqualTo(userDetails);
         assertThat(authentication.isAuthenticated()).isTrue();
+        verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    void 유효한_토큰이어도_사용자가_DB에_없으면_예외없이_인증하지_않고_통과시킨다() throws Exception {
+        // given: 서명·만료는 유효하지만 그 사이 탈퇴/삭제된 사용자의 토큰 (#110)
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader("Authorization", "Bearer deleted-user-token");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        FilterChain filterChain = mock(FilterChain.class);
+
+        when(jwtTokenProvider.validateToken("deleted-user-token")).thenReturn(true);
+        when(jwtTokenProvider.getStudentId("deleted-user-token")).thenReturn("202012345");
+        when(studentUserDetailsService.loadUserByUsername("202012345"))
+            .thenThrow(new UsernameNotFoundException("존재하지 않는 학번입니다"));
+
+        // when
+        filter.doFilterInternal(request, response, filterChain);
+
+        // then
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
         verify(filterChain).doFilter(request, response);
     }
 }

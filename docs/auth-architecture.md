@@ -111,6 +111,11 @@ Figma 화면 기준으로 "로그인 없이 보이는 화면(첫 페이지 등)"
       추출·검증 후 `SecurityContext`에 위 커스텀 `UserDetails` 채움
 - [x] `JwtAuthenticationEntryPoint` — 인증 안 된 요청에 401 JSON 응답
 - [x] `SecurityConfig`에 필터 등록 (`addFilterBefore` + `exceptionHandling`)
+- [x] **유효한 토큰 + DB에 없는 사용자**(탈퇴·삭제, 개발 DB 초기화 등) 처리 — [이슈 #110](https://github.com/inu-jeongbobada/jeongboBada-backend/issues/110).
+      필터에서 `UsernameNotFoundException`을 잡아 무효 토큰과 똑같이 **인증 없이 통과**시킨다.
+      이 필터는 `ExceptionTranslationFilter`보다 앞에 있어서, 필터에서 예외를 던지면 EntryPoint(401)로 가지 못하고
+      공개 API까지 500이 됐다. 지금은 공개 API → 200(토큰 무시), 보호 API → 401(`COMMON_401`).
+      (`JwtAuthenticationFilterTest`, `DeletedUserTokenIntegrationTest`)
 - [x] 과목 후기 담당자에게 엔티티에 작성자 `user_id` 컬럼(FK) 먼저 넣어두라고 전달함
 - [ ] **후속(다른 도메인 담당)**: 실제로 로그인 필요한 경로를 `permitAll` → `authenticated()`로
       전환하는 건 각 도메인 PR에서 진행 — 위 "실제로 어느 경로를 막을지는 누가 정하나" 참고.
