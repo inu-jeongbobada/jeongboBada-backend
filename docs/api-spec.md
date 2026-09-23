@@ -63,6 +63,31 @@
 | Method | Path | 설명 | 상태 |
 |---|---|---|---|
 
+## 토큰
+로그인(`POST /api/auth/login`)하면 `accessToken`과 `refreshToken`을 받는다. 로그인이 필요한 API는 `Authorization: Bearer {accessToken}` 헤더로 호출한다 (Swagger에서 자물쇠가 있는 API).
+
+| 토큰 | 유효 기간 | 설정 |
+|---|---|---|
+| access token | 1시간 | `jwt.expiration` |
+| refresh token | 14일 | `jwt.refresh-expiration` |
+
+- **재발급**(`POST /api/auth/reissue`, body에 `refreshToken`): access·refresh를 **둘 다 새로** 받는다. 받은 refresh로 바꿔 저장해야 한다 — 이전 refresh는 그 순간 무효가 된다.
+- **사용자당 refresh token은 1개**다. 다른 기기에서 로그인하거나 재발급하면 이전 refresh는 무효가 된다.
+- **비밀번호 변경·비밀번호 재설정에 성공하면** 서버의 refresh가 지워져서 모든 기기에서 다시 로그인해야 한다.
+- **로그인이 필요 없는 API**는 토큰이 만료·위조돼도 무시하고 정상 응답한다 (401이 나지 않는다).
+- **로그아웃**(`POST /api/auth/logout`, `Authorization` 헤더 필수)은 서버의 refresh를 지운다. 단, **access token이 이미 만료된 상태면 아무것도 지우지 않고 200**을 준다 — 그 refresh는 만료(14일)까지 서버에서 유효하게 남는다. 프론트는 응답과 상관없이 기기의 토큰을 지운다.
+
+### 401을 받았을 때 (프론트 인터셉터 기준)
+`code`로 구분한다. 401이라고 모두 재발급 대상이 아니다.
+
+| 응답 | 의미 | 프론트 처리 |
+|---|---|---|
+| 401 `AUTHENTICATION_REQUIRED` | access token 없음·만료·위조, 또는 탈퇴·삭제된 사용자의 토큰 (서로 구분하지 않음) | `reissue` 후 원래 요청 재시도. `reissue`도 실패하면 로그아웃 처리 |
+| 401 `INVALID_REFRESH_TOKEN` | `reissue` 실패 — refresh 없음·만료·위조·이미 교체됨 | 로그아웃 처리 (재시도하지 않음) |
+| 401 `INVALID_CREDENTIALS` | 로그인 실패 (학번 없음과 비밀번호 틀림을 구분하지 않음) | 로그인 폼에 오류 표시. **재발급 대상 아님** |
+| 400 `CURRENT_PASSWORD_MISMATCH` | 비밀번호·이메일 변경 때 현재 비밀번호 틀림 | 폼에 오류 표시. **401이 아니다** (예전엔 401이었음, #115) |
+| 403 `FORBIDDEN`, `PROFESSOR_COMMENT_FORBIDDEN` | 로그인은 됐지만 권한 없음 (예: 남의 교수 후기 수정) | 재발급하지 않는다 |
+
 ## 에러 코드
 공통 응답 포맷: `{ "success": false, "data": null, "code": "...", "message": "...", "errors"?: [...] }` (`errors`는 필드별 오류가 있을 때만)
 
