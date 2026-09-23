@@ -54,6 +54,24 @@ PR에 아래 중 하나라도 있으면 **통합 테스트를 1개 이상** 붙�
 - 메일 발송 같은 외부 호출은 `@MockitoBean`으로 대체한다
 - **로컬에서 통과했다고 끝내지 말 것.** 로컬은 각자의 `application.yml`이 있어서 CI와 조건이 다르다. 설정 파일이 없는 깨끗한
   복제본에서 CI와 같이 환경변수 3개(`SPRING_DATASOURCE_URL/USERNAME/PASSWORD`)만 주고 `./gradlew build`가 통과하는지 확인한다.
+- **DB도 CI처럼 비어 있어야 한다.** 로컬 DB에는 `bootRun`이 넣은 `data.sql` 시드 데이터가 있어서, 데이터에 따라 결과가 달라지는
+  테스트는 로컬만 통과할 수 있다. 빈 MySQL을 임시로 띄워 확인하고 끝나면 지운다:
+  `docker run -d --name jb-ci-mysql -e MYSQL_DATABASE=jeongbobada -e MYSQL_USER=jeongbobada -e MYSQL_PASSWORD=jeongbobada -e MYSQL_ROOT_PASSWORD=root -p 3307:3306 mysql:8.4`
+  → `SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3307/jeongbobada` 로 빌드 → `docker rm -f jb-ci-mysql`
+
+## 에러 처리 규칙
+에러 응답은 `{ success:false, code, message, errors? }`(`ApiResponse`) 하나로 통일한다. 아래 규칙은 테스트 2개가 CI에서 강제한다.
+
+- **새 에러는 도메인 `ErrorCode` enum과 `docs/api-spec.md` "에러 코드" 표에 함께 추가한다.**
+  - code는 상황 하나에 하나, 의미 있는 `UPPER_SNAKE_CASE` 문자열 (예: `DUPLICATE_NICKNAME`). HTTP 상태나 번호를 넣지 않는다 (#115)
+  - `ErrorCodeRulesTest`가 code 중복·형식, 문서 표와의 일치(HTTP 상태 포함)를 검사한다
+- **클라이언트가 잘못 보낸 요청은 500이 아니라 4xx여야 한다.**
+  - 요청 DTO에 검증 애노테이션(`@NotNull`/`@NotBlank`/`@Size` 등)을 붙이고 컨트롤러 `@RequestBody`에 `@Valid`. 필수값 null이 서비스까지 내려가 500이 되는 게 가장 흔한 원인이다
+  - `BadRequestSafetyNetIntegrationTest`가 **모든 API**에 잘못된 요청(body 없음·깨진 JSON·`{}`·`[]`·text/plain·경로 변수 문자열/범위 초과 × 토큰 유무)을 보내 500이 없는지 검사한다. 새 API도 자동으로 포함된다
+  - 당장 못 고치는 500은 버그 이슈를 만들고 그 테스트의 `KNOWN_500`에 이슈 번호와 함께 등록한다. **고치면 반드시 제거한다** — 그 이슈 체크리스트에 "KNOWN_500에서 제거"를 적어둘 것 (테스트가 강제하지 못한다: 500 도달 여부가 DB 데이터에 따라 달라서)
+- **필터(`OncePerRequestFilter` 등)에서는 예외를 던지지 않는다.** 필터는 `GlobalExceptionHandler`보다 앞이라 예외가 500으로 샌다 (#110)
+- **Spring MVC 표준 예외에 `@ExceptionHandler`를 새로 달지 않는다.** `GlobalExceptionHandler`가 `ResponseEntityExceptionHandler`를 상속해 이미 처리하므로, 같은 타입에 또 달면 기동 시 ambiguous 오류가 난다. 메시지를 바꾸려면 부모의 `handleXxx`를 오버라이드한다 (#111)
+- **UNIQUE 컬럼은 서비스에서 사전 확인(`existsBy...`)하고 도메인 code(예: `DUPLICATE_NICKNAME`)로 응답한다.** 확인과 저장 사이 동시 요청 충돌은 전역 핸들러가 409 `DUPLICATE_RESOURCE`로 처리한다 (#109)
 
 ## 도메인 아키텍처 문서화 규칙
 어떤 도메인에 `docs/{도메인}-architecture.md`(예: `docs/auth-architecture.md`)가 있다면,
