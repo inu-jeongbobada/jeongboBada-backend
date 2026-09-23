@@ -26,7 +26,6 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -42,14 +41,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 // 이 테스트가 실패하면 실패 목록(메서드·경로·요청 유형·상태 코드)이 메시지로 나온다. 고치는 방법:
 //   - 요청 DTO에 검증 애노테이션 + 컨트롤러에 @Valid (필수값 누락이 서비스까지 내려가 500이 되는 경우가 가장 흔하다)
 //   - 필터에서 예외를 던지지 않기 (#110), 새 예외는 GlobalExceptionHandler가 ApiResponse로 감싸는지 확인
-//   - 당장 못 고치면 버그 이슈를 만들고 KNOWN_500에 이슈 번호와 함께 등록 (고치면 반드시 제거)
+//   - 당장 못 고치면 버그 이슈를 만들고 KNOWN_500에 이슈 번호와 함께 등록 (고치면 반드시 제거 — 이슈 체크리스트에 적어둘 것)
 @SpringBootTest
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 class BadRequestSafetyNetIntegrationTest {
 
-    // 아직 고치지 못한 알려진 500. "METHOD 경로패턴 요청유형" → 이슈 번호.
-    // 이슈가 해결되면 여기서 지운다 — 지우지 않으면 아래 테스트가 "이제 500이 아니다"라고 알려준다.
+    // 아직 고치지 못한 알려진 500. "METHOD 경로패턴 요청유형" → 이슈 번호. 이 조합에서 난 500만 건너뛴다.
+    // 이슈가 해결되면 반드시 여기서 지운다 (그 이슈의 체크리스트에 적어둘 것).
+    // "이제 500이 아니면 실패"로 강제하지 않는 이유: 500까지 도달하는지가 DB 데이터에 따라 달라진다.
+    // 예) 강의평 {}는 과목 1번이 있어야 서비스까지 가서 500이 나는데, CI의 빈 DB에서는 404로 먼저 끝난다.
     private static final Map<String, String> KNOWN_500 = Map.of(
         // 요청 DTO에 검증이 없어 professorId null이 서비스까지 내려가 findById(null)에서 500
         "POST /api/courses/{courseId}/reviews EMPTY_OBJECT", "#105"
@@ -122,7 +123,6 @@ class BadRequestSafetyNetIntegrationTest {
     @Test
     void 모든_API는_잘못된_요청에_500이_아니라_ApiResponse_형식의_4xx로_응답한다() throws Exception {
         List<String> failures = new ArrayList<>();
-        Set<String> knownStill500 = new HashSet<>();
         int requests = 0;
 
         for (RequestMappingInfo info : handlerMapping.getHandlerMethods().keySet()) {
@@ -143,7 +143,6 @@ class BadRequestSafetyNetIntegrationTest {
                                 String problem = check(response);
 
                                 if (KNOWN_500.containsKey(key) && response.getStatus() >= 500) {
-                                    knownStill500.add(key);
                                     continue;
                                 }
                                 if (problem != null) {
@@ -158,11 +157,6 @@ class BadRequestSafetyNetIntegrationTest {
 
         assertThat(requests).as("검사한 요청 수 — 0이면 API 목록을 못 모은 것").isGreaterThan(100);
         assertThat(failures).as("잘못된 요청에 500이 나거나 ApiResponse 형식이 아닌 응답 (%d건 중)", requests).isEmpty();
-        List<String> fixedKnown = KNOWN_500.entrySet().stream()
-            .filter(known -> !knownStill500.contains(known.getKey()))
-            .map(known -> known.getKey() + " (" + known.getValue() + ")")
-            .toList();
-        assertThat(fixedKnown).as("KNOWN_500에 있지만 이제 500이 아니다 — KNOWN_500에서 지울 것").isEmpty();
     }
 
     private MockHttpServletResponse perform(RequestMethod method, String path, BodyCase bodyCase, boolean withToken) throws Exception {
