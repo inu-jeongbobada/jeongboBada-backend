@@ -12,6 +12,10 @@ public enum GlobalErrorCode implements BaseErrorCode {
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다"), // 500
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "AUTHENTICATION_REQUIRED", "인증이 필요합니다"), // 401
     FORBIDDEN(HttpStatus.FORBIDDEN, "FORBIDDEN", "권한이 없습니다"), // 403
+    NOT_ACCEPTABLE(HttpStatus.NOT_ACCEPTABLE, "NOT_ACCEPTABLE", "지원하지 않는 응답 형식입니다. Accept는 application/json이어야 합니다"), // 406
+    // 사전 중복 확인과 저장 사이에 다른 요청이 끼어들어 DB UNIQUE 제약에 걸린 경우 (동시 요청·더블클릭)
+    DUPLICATE_RESOURCE(HttpStatus.CONFLICT, "DUPLICATE_RESOURCE", "이미 존재하는 데이터입니다"), // 409
+    UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "UNSUPPORTED_MEDIA_TYPE", "지원하지 않는 Content-Type입니다. application/json으로 보내주세요"), // 415
     ;
 
     private final HttpStatus httpStatus;

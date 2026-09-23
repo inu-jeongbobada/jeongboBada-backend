@@ -28,7 +28,7 @@ Spring Security 필터 체인 구조상 거의 정형화된 패턴을 따른다.
 
 | API | 로그인 필요? | 규칙 |
 |---|---|---|
-| `POST /api/auth/signup` | X | 학번/닉네임/이메일 중복 검사 후 BCrypt로 암호화해 저장. **이메일 필수**(비밀번호 찾기용, 대소문자·공백 무시하고 정규화해 저장) |
+| `POST /api/auth/signup` | X | 학번/닉네임/이메일 중복 검사 후 BCrypt로 암호화해 저장. 검사와 저장 사이에 같은 값으로 동시 가입(더블클릭 등)이 끼어들면 DB UNIQUE 제약에 걸리고, `GlobalExceptionHandler`가 409(`DUPLICATE_RESOURCE`)로 응답 — 이때는 어느 필드가 겹쳤는지 구분하지 않음 (#109, `ConcurrentSignupIntegrationTest`). **이메일 필수**(비밀번호 찾기용, 대소문자·공백 무시하고 정규화해 저장) |
 | `POST /api/auth/login` | X | 학번+비밀번호를 `AuthenticationManager`에 위임해 검증. **학번이 없는 경우와 비밀번호가 틀린 경우를 구분하지 않고 둘 다 동일하게 401(`INVALID_CREDENTIALS`)** — user enumeration(가입 여부 유추) 방지 목적, `GlobalExceptionHandler.handleBadCredentialsException` 참고 |
 | `POST /api/auth/reissue` | X (refresh token 자체가 인증 수단) | refresh token 서명·만료 검증 + **DB에 저장된 값과 문자열 일치**해야 통과 (탈취된 구 토큰 재사용 방지). 통과 시 access/refresh 둘 다 새로 발급(회전) |
 | `POST /api/auth/logout` | O (access token) | DB에 저장된 refresh token을 삭제만 함 — access token 자체를 서버가 강제로 만료시키는 건 아니라서, 이미 발급된 access token은 만료 시각까지는 계속 유효 |
