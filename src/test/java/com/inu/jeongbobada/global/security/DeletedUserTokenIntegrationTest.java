@@ -77,6 +77,6 @@ class DeletedUserTokenIntegrationTest {
                     {"nickname":"newnick"}
                     """))
             .andExpect(status().isUnauthorized())
-            .andExpect(jsonPath("$.code").value("COMMON_401"));
+            .andExpect(jsonPath("$.code").value("AUTHENTICATION_REQUIRED"));
     }
 }

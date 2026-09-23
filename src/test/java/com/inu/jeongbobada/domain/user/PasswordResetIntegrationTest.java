@@ -136,7 +136,7 @@ class PasswordResetIntegrationTest {
         // 코드는 1회용 — DB에서 폐기돼 같은 코드로 다시 재설정할 수 없다
         postJson("/api/auth/password-reset", resetJson)
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.code").value("USER_400"));
+            .andExpect(jsonPath("$.code").value("INVALID_VERIFICATION_CODE"));
     }
 
     @Test
@@ -227,7 +227,9 @@ class PasswordResetIntegrationTest {
                 .content("""
                     {"newEmail":"%s","code":"%s","currentPassword":"wrongPassword1"}
                     """.formatted(newEmail, code)))
-            .andExpect(status().isUnauthorized());
+            // 401이 아니라 400 — 401이면 프론트 인터셉터가 토큰 재발급/로그아웃으로 오인한다 (#115)
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("CURRENT_PASSWORD_MISMATCH"));
         assertThat(userRepository.findByStudentId(account.studentId()).orElseThrow().getEmail())
             .isEqualTo(account.email());
 

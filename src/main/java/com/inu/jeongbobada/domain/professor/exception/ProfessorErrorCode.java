@@ -6,7 +6,7 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 public enum ProfessorErrorCode implements BaseErrorCode {
-    PROFESSOR_NOT_FOUND(HttpStatus.NOT_FOUND, "PROFESSOR_404", "존재하지 않는 교수입니다.");
+    PROFESSOR_NOT_FOUND(HttpStatus.NOT_FOUND, "PROFESSOR_NOT_FOUND", "존재하지 않는 교수입니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

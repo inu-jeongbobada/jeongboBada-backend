@@ -3,7 +3,7 @@ import com.inu.jeongbobada.domain.course.dto.response.CourseDetailResDto;
 import com.inu.jeongbobada.domain.course.dto.response.CourseListResDto;
 import com.inu.jeongbobada.domain.course.dto.response.CourseOfferingResDto;
 import com.inu.jeongbobada.domain.course.entity.Course;
-import com.inu.jeongbobada.domain.course.exception.CourseException;
+import com.inu.jeongbobada.domain.course.exception.CourseErrorCode;
 import com.inu.jeongbobada.domain.course.repository.CourseOfferingRepository;
 import com.inu.jeongbobada.domain.course.repository.CourseRepository;
 import com.inu.jeongbobada.global.exception.BusinessException;
@@ -35,7 +35,7 @@ public class CourseService {
     public CourseDetailResDto getCourse(Long courseId) {
 
         Course course = courseRepository.findById(courseId)
-            .orElseThrow(()-> new BusinessException(CourseException.COURSE_NOT_FOUND));
+            .orElseThrow(()-> new BusinessException(CourseErrorCode.COURSE_NOT_FOUND));
 
         List<CourseOfferingResDto> offerings = courseOfferingRepository
             .findAllByCourse_CourseIdAndActiveTrue(courseId)
