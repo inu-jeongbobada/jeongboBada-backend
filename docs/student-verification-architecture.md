@@ -35,7 +35,7 @@
 ### 1. S3 연동
 - [ ] AWS SDK 의존성 추가
 - [ ] S3 버킷 생성 및 IAM 사용자/권한 설정
-- [ ] `application.yml.example`에 S3 설정 키 추가 (액세스키는 당연히 빈 값, `docker-compose.yml`/`.env.example`도 같이 — `CLAUDE.md`의 설정값 체크리스트 참고)
+- [ ] `application.yml.example`에 S3 설정 키 추가 (액세스키는 당연히 빈 값, `docker-compose.yml`/`.env.example`도 같이 — `AGENTS.md`의 설정값 체크리스트 참고)
 - [ ] 파일 업로드/다운로드 유틸 클래스
 
 ### 2. 재학 확인 플로우

@@ -21,7 +21,7 @@
 | `USERS` | 사용자 (학번 기반 인증, 이메일 인증코드 포함) | user | 구현 |
 | `PROFESSOR` | 교수 정보 | professor | 구현 |
 | `LAB` | 연구실 정보 (교수와 1:1) | lab | 구현 |
-| `PROFESSOR_COMMENT` | 교수 후기 (CLAUDE.md의 `professor_review`) | professorComment | 구현 |
+| `PROFESSOR_COMMENT` | 교수 후기 (AGENTS.md의 `professor_review`) | professorComment | 구현 |
 | `COURSE` | 전공 과목 자체 정보 (학기가 바뀌어도 불변) | course | 구현 |
 | `COURSE_OFFERING` | 학년도/학기별 개설 정보 (담당 교수·시간표·학점 등) | course | 구현 |
 | `COURSE_REVIEW` | 수업 후기 (학점별 필터 대상) | courseReview | 구현 |
@@ -32,7 +32,7 @@
 | `FAVORITE` | 즐겨찾기 | mypage | 미구현 (엔티티 없음) |
 | `NOTIFICATION` | 알림 | mypage | 미구현 (엔티티 없음) |
 
-> CLAUDE.md의 "데이터 모델 (10개 테이블)"과 달라진 점: `professor_review`는 `PROFESSOR_COMMENT`로 구현됐고,
+> AGENTS.md의 "데이터 모델 (10개 테이블)"과 달라진 점: `professor_review`는 `PROFESSOR_COMMENT`로 구현됐고,
 > 목록에 없던 `COURSE_OFFERING`, `LAB`, `MATERIAL`이 추가됐다.
 
 ## 다이어그램

@@ -1,8 +1,8 @@
 # 팀원은 Docker Desktop만 설치한 뒤 `docker compose up -d`로 MySQL + 백엔드를 함께 띄운다.
-# CLAUDE.md 규칙: MySQL은 로컬에 직접 설치하지 않고 이 파일로만 실행한다.
+# AGENTS.md 규칙: MySQL은 로컬에 직접 설치하지 않고 이 파일로만 실행한다.
 services:
   mysql:
-    image: mysql:8.4 # 버전 고정 (CLAUDE.md 확정 버전)
+    image: mysql:8.4 # 버전 고정 (AGENTS.md 확정 버전)
     container_name: jeongbobada-mysql
     restart: unless-stopped # Docker Desktop/컴퓨터 재시작 시 자동 재기동
     environment:
