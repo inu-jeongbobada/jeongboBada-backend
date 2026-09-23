@@ -35,6 +35,9 @@ Docker 경로에서 컨테이너가 기동 실패한다.
       확장자는 `.properties`로 고정 — `.yml`로 만들면 `.gitignore`의 `application-*.yml`에 걸려 커밋에서 조용히 빠진다)
 
 작업을 마치기 전에 이 체크리스트를 훑어보고, 새로 추가한 설정값이 위 곳들에 다 반영됐는지 확인할 것.
+CI의 "docker compose 기동 스모크" 잡(`scripts/ci/compose-smoke.sh`)이 docker compose 경로로 backend가 뜨고 로그인까지 되는지 확인한다.
+단, **값이 비어도 기동되는 설정은 잡지 못한다** — 필수 설정이면 `@ConfigurationProperties`에 `@Validated` + 검증 애노테이션을 달아
+비었을 때 기동이 실패하게 만든다 (예: `JwtProperties`).
 (Claude Code에서는 `.claude/hooks/check-config-sync.sh` 훅이 파일 수정 때마다 이 체크리스트를 자동으로 검사한다.
 Codex 등 다른 도구에는 이 훅이 없으니 반드시 직접 확인한다.)
 
