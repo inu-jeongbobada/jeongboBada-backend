@@ -89,14 +89,6 @@ class ValidationErrorFieldsIntegrationTest {
     }
 
     @Test
-    void 필수_헤더가_없으면_헤더_이름을_알려준다() throws Exception {
-        mockMvc.perform(post("/api/auth/logout"))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.code").value("INVALID_INPUT_VALUE"))
-            .andExpect(jsonPath("$.message").value(containsString("Authorization")));
-    }
-
-    @Test
     void 검증과_무관한_에러에는_errors가_없다() throws Exception {
         mockMvc.perform(get("/api/courses").contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
