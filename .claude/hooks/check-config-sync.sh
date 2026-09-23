@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# CLAUDE.md의 "설정값(application.yml) 추가/변경 시 체크리스트"를 자동으로 검사한다.
+# AGENTS.md의 "설정값(application.yml) 추가/변경 시 체크리스트"를 자동으로 검사한다.
 # application.yml.example의 jwt.* 키가 docker-compose.yml / .env.example / .env에도
 # 같은 이름(JWT_* 환경변수)으로 존재하는지 비교해서, 빠진 게 있으면 경고한다.
 set -euo pipefail
@@ -53,7 +53,7 @@ if [ "$missing" -eq 1 ]; then
   {
     echo "⚠️  jwt.* 설정값이 application.yml.example / docker-compose.yml / .env(.example)에 안 맞습니다:"
     printf "%b" "$report"
-    echo "CLAUDE.md의 '설정값 추가/변경 시 체크리스트' 참고."
+    echo "AGENTS.md의 '설정값 추가/변경 시 체크리스트' 참고."
   } >&2
   exit 2
 fi

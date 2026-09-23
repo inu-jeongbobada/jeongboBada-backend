@@ -1,6 +1,6 @@
 # API 명세
 
-개발 우선순위(CLAUDE.md)에 맞춰 도메인별로 채워 나간다.
+개발 우선순위(AGENTS.md)에 맞춰 도메인별로 채워 나간다.
 
 ## 1. 인증 (user)
 공통 응답 포맷: `{ "success": boolean, "data": T, "code": string | null, "message": string | null, "errors"?: [{ "field", "message" }] }`
