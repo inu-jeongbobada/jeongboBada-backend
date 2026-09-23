@@ -95,7 +95,7 @@ class EmailChangeServiceTest {
         service.sendCode(USER_ID, NEW_EMAIL);
 
         assertThatThrownBy(() -> service.sendCode(USER_ID, NEW_EMAIL))
-            .satisfies(e -> assertErrorCode(e, UserErrorCode.CODE_RESEND_TOO_FAST));
+            .satisfies(e -> assertErrorCode(e, UserErrorCode.VERIFICATION_CODE_RESEND_TOO_FAST));
         verify(emailSender, times(1)).send(anyString(), anyString(), anyString());
     }
 
@@ -125,7 +125,7 @@ class EmailChangeServiceTest {
         String code = sentCodeTo(NEW_EMAIL);
 
         assertThatThrownBy(() -> service.updateEmail(USER_ID, NEW_EMAIL, code, "wrongPassword1"))
-            .satisfies(e -> assertErrorCode(e, UserErrorCode.PASSWORD_MISMATCH));
+            .satisfies(e -> assertErrorCode(e, UserErrorCode.CURRENT_PASSWORD_MISMATCH));
         assertThat(user.getEmail()).isEqualTo(OLD_EMAIL);
     }
 

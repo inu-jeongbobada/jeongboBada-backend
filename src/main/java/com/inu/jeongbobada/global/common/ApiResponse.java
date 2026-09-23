@@ -33,11 +33,7 @@ public record ApiResponse<T>(
         return new ApiResponse<>(HttpStatus.CREATED, true, data, null, null, null);
     }
 
-    //지울 예정
-    public static <T> ApiResponse<T> error(final HttpStatus httpStatus, final String message) {
-        return new ApiResponse<>(httpStatus, false, null, null, message, null);
-    }
-
+    // 에러 응답은 반드시 BaseErrorCode를 거친다 — code 없는 에러 응답을 만들 수 없게 (#131)
     public static <T> ApiResponse<T> error(final BaseErrorCode errorCode) {
         return new ApiResponse<>(errorCode.getHttpStatus(), false, null, errorCode.getCode(), errorCode.getMessage(), null);
     }

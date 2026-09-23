@@ -26,13 +26,13 @@ class JwtAuthenticationEntryPointTest {
         entryPoint.commence(request, response, new BadCredentialsException("인증 실패"));
 
         // then
-        assertThat(response.getStatus()).isEqualTo(GlobalErrorCode.UNAUTHORIZED.getHttpStatus().value());
+        assertThat(response.getStatus()).isEqualTo(GlobalErrorCode.AUTHENTICATION_REQUIRED.getHttpStatus().value());
         // setCharacterEncoding 호출 순서상 charset이 뒤에 붙으므로 접두사만 확인
         assertThat(response.getContentType()).startsWith(MediaType.APPLICATION_JSON_VALUE);
 
         JsonNode body = objectMapper.readTree(response.getContentAsString());
         assertThat(body.get("success").asBoolean()).isFalse();
-        assertThat(body.get("code").asString()).isEqualTo(GlobalErrorCode.UNAUTHORIZED.getCode());
-        assertThat(body.get("message").asString()).isEqualTo(GlobalErrorCode.UNAUTHORIZED.getMessage());
+        assertThat(body.get("code").asString()).isEqualTo(GlobalErrorCode.AUTHENTICATION_REQUIRED.getCode());
+        assertThat(body.get("message").asString()).isEqualTo(GlobalErrorCode.AUTHENTICATION_REQUIRED.getMessage());
     }
 }

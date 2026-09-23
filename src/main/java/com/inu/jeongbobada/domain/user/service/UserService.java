@@ -36,7 +36,7 @@ public class UserService {
         User user = getUser(userId);
 
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
-            throw new BusinessException(UserErrorCode.PASSWORD_MISMATCH);
+            throw new BusinessException(UserErrorCode.CURRENT_PASSWORD_MISMATCH);
         }
 
         user.updatePassword(passwordEncoder.encode(newPassword));

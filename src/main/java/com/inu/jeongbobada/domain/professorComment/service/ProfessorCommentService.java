@@ -49,7 +49,7 @@ public class ProfessorCommentService {
         }
 
         if (!professorComment.getProfessor().getProfessorId().equals(professorId)) {
-            throw new BusinessException(ProfessorCommentErrorCode.INVALID_PROFESSOR);
+            throw new BusinessException(ProfessorCommentErrorCode.PROFESSOR_COMMENT_PROFESSOR_MISMATCH);
         }
 
         professorComment.update(
@@ -69,7 +69,7 @@ public class ProfessorCommentService {
         }
 
         if (!professorComment.getProfessor().getProfessorId().equals(professorId)) {
-            throw new BusinessException(ProfessorCommentErrorCode.INVALID_PROFESSOR);
+            throw new BusinessException(ProfessorCommentErrorCode.PROFESSOR_COMMENT_PROFESSOR_MISMATCH);
         }
 
         professorCommentRepository.delete(professorComment);

@@ -191,13 +191,18 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @Override
     protected ResponseEntity<Object> handleExceptionInternal(
             Exception ex, @Nullable Object body, HttpHeaders headers, HttpStatusCode statusCode, WebRequest request) {
+        BaseErrorCode fallbackCode = errorCodeOf(statusCode);
         if (statusCode.is5xxServerError()) {
             log.error("Spring MVC 처리 중 서버 오류", ex);
+        } else if (!(body instanceof ApiResponse<?>) && fallbackCode.getHttpStatus().value() != statusCode.value()) {
+            // 상태 코드와 code가 어긋나는 응답이 나가는 중 — 눈에 띄도록 error로 남긴다 (#131)
+            log.error("매핑되지 않은 {} 응답: code가 {}({})로 나간다. GlobalErrorCode에 전용 code를 추가하고 errorCodeOf에 매핑할 것",
+                    statusCode.value(), fallbackCode.getCode(), fallbackCode.getHttpStatus().value(), ex);
         } else {
             log.warn("{}: {}", ex.getClass().getSimpleName(), ex.getMessage());
         }
 
-        Object responseBody = body instanceof ApiResponse<?> ? body : ApiResponse.error(errorCodeOf(statusCode));
+        Object responseBody = body instanceof ApiResponse<?> ? body : ApiResponse.error(fallbackCode);
         HttpHeaders jsonHeaders = HttpHeaders.copyOf(headers);
         jsonHeaders.setContentType(MediaType.APPLICATION_JSON);
         return super.handleExceptionInternal(ex, responseBody, jsonHeaders, statusCode, request);
@@ -206,10 +211,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     // ---------- helpers ----------
 
     // 표준 예외의 상태 코드 → 응답 code. 목록에 없는 4xx(예: 413 업로드 용량 초과)는 상태 코드는 그대로 두고
-    // code만 INVALID_INPUT_VALUE로 내려간다 — 그런 예외를 실제로 쓰게 되면 GlobalErrorCode에 전용 코드를 추가할 것.
+    // code만 INVALID_INPUT_VALUE(400)로 나가서 둘이 어긋난다. 지금은 도달 경로가 없고(업로드 기능 없음), 실제로 나가면
+    // handleExceptionInternal이 error 로그를 남긴다. 그 4xx를 쓰는 기능 PR에서 전용 code를 추가해 여기 매핑한다 (#131).
     private static BaseErrorCode errorCodeOf(HttpStatusCode status) {
         return switch (status.value()) {
-            case 404 -> GlobalErrorCode.RESOURCE_NOT_FOUND;
+            case 404 -> GlobalErrorCode.API_NOT_FOUND;
             case 405 -> GlobalErrorCode.METHOD_NOT_ALLOWED;
             case 406 -> GlobalErrorCode.NOT_ACCEPTABLE;
             case 415 -> GlobalErrorCode.UNSUPPORTED_MEDIA_TYPE;
