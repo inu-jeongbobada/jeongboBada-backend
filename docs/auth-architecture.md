@@ -29,13 +29,13 @@ Spring Security 필터 체인 구조상 거의 정형화된 패턴을 따른다.
 | API | 로그인 필요? | 규칙 |
 |---|---|---|
 | `POST /api/auth/signup` | X | 학번/닉네임/이메일 중복 검사 후 BCrypt로 암호화해 저장. **이메일 필수**(비밀번호 찾기용, 대소문자·공백 무시하고 정규화해 저장) |
-| `POST /api/auth/login` | X | 학번+비밀번호를 `AuthenticationManager`에 위임해 검증. **학번이 없는 경우와 비밀번호가 틀린 경우를 구분하지 않고 둘 다 동일하게 401(`USER_401`)** — user enumeration(가입 여부 유추) 방지 목적, `GlobalExceptionHandler.handleBadCredentialsException` 참고 |
+| `POST /api/auth/login` | X | 학번+비밀번호를 `AuthenticationManager`에 위임해 검증. **학번이 없는 경우와 비밀번호가 틀린 경우를 구분하지 않고 둘 다 동일하게 401(`INVALID_CREDENTIALS`)** — user enumeration(가입 여부 유추) 방지 목적, `GlobalExceptionHandler.handleBadCredentialsException` 참고 |
 | `POST /api/auth/reissue` | X (refresh token 자체가 인증 수단) | refresh token 서명·만료 검증 + **DB에 저장된 값과 문자열 일치**해야 통과 (탈취된 구 토큰 재사용 방지). 통과 시 access/refresh 둘 다 새로 발급(회전) |
 | `POST /api/auth/logout` | O (access token) | DB에 저장된 refresh token을 삭제만 함 — access token 자체를 서버가 강제로 만료시키는 건 아니라서, 이미 발급된 access token은 만료 시각까지는 계속 유효 |
 | `PATCH /api/users/me/nickname` | O | 닉네임 `unique` 제약 때문에 중복 검사하되, **본인 소유 닉네임이면 중복 에러 안 냄**(자기 자신으로의 "변경"은 통과) |
-| `PATCH /api/users/me/password` | O | **현재 비밀번호(`currentPassword`) 확인 필수** — 세션(access token) 탈취 상태에서 공격자가 비밀번호만 바꿔버리는 것 방지. 성공 시 **기존 refresh token 무효화**(`clearRefreshToken()`) → 다른 기기/세션은 재로그인 필요 |
+| `PATCH /api/users/me/password` | O | **현재 비밀번호(`currentPassword`) 확인 필수** — 세션(access token) 탈취 상태에서 공격자가 비밀번호만 바꿔버리는 것 방지. 현재 비밀번호가 틀리면 **400**(`CURRENT_PASSWORD_MISMATCH`) — 401이면 프론트 인터셉터가 토큰 재발급으로 오인함(#115). 성공 시 **기존 refresh token 무효화**(`clearRefreshToken()`) → 다른 기기/세션은 재로그인 필요 |
 | `POST /api/auth/password-reset/send-code` | X | 학번+이메일이 **가입 때 등록한 것과 일치할 때만** 6자리 코드를 메일로 발송. 학번 없음/이메일 불일치/쿨다운 중/**메일 발송 실패**도 전부 동일하게 200 — user enumeration 방지(로그인 API와 같은 원칙), 원인은 서버 로그로만 남김 |
-| `POST /api/auth/password-reset/verify-code` | X | 코드가 맞는지만 확인하고 **코드는 소모하지 않음**(화면 단계 이동 판단용). 없음/만료/불일치/없는 학번 모두 동일하게 400(`USER_400`) |
+| `POST /api/auth/password-reset/verify-code` | X | 코드가 맞는지만 확인하고 **코드는 소모하지 않음**(화면 단계 이동 판단용). 없음/만료/불일치/없는 학번 모두 동일하게 400(`INVALID_VERIFICATION_CODE`) |
 | `POST /api/auth/password-reset` | X | 학번+코드+새 비밀번호. **서버는 verify-code 통과를 기억하지 않으므로 코드를 다시 검증**하고, 성공하면 코드를 폐기(1회용). 성공 시 `clearRefreshToken()`으로 기존 로그인 무효화 |
 | `POST /api/users/me/email/send-code` | O | **새 이메일**로 인증코드 발송. 현재 이메일과 동일 400 / 이미 사용 중 409 / 쿨다운 중 429 / 발송 실패 503 (로그인한 본인 대상이라 사유를 그대로 알려줌) |
 | `PATCH /api/users/me/email` | O | `newEmail`+`code`+`currentPassword`. **현재 비밀번호 확인 필수**, 코드를 받은 이메일과 다른 주소로는 변경 불가. 이메일이 없는 기존 가입자도 같은 API로 처음 등록 |
@@ -114,7 +114,7 @@ Figma 화면 기준으로 "로그인 없이 보이는 화면(첫 페이지 등)"
 - [x] **유효한 토큰 + DB에 없는 사용자**(탈퇴·삭제, 개발 DB 초기화 등) 처리 — [이슈 #110](https://github.com/inu-jeongbobada/jeongboBada-backend/issues/110).
       필터에서 `UsernameNotFoundException`을 잡아 무효 토큰과 똑같이 **인증 없이 통과**시킨다.
       이 필터는 `ExceptionTranslationFilter`보다 앞에 있어서, 필터에서 예외를 던지면 EntryPoint(401)로 가지 못하고
-      공개 API까지 500이 됐다. 지금은 공개 API → 200(토큰 무시), 보호 API → 401(`COMMON_401`).
+      공개 API까지 500이 됐다. 지금은 공개 API → 200(토큰 무시), 보호 API → 401(`AUTHENTICATION_REQUIRED`).
       (`JwtAuthenticationFilterTest`, `DeletedUserTokenIntegrationTest`)
 - [x] 과목 후기 담당자에게 엔티티에 작성자 `user_id` 컬럼(FK) 먼저 넣어두라고 전달함
 - [ ] **후속(다른 도메인 담당)**: 실제로 로그인 필요한 경로를 `permitAll` → `authenticated()`로

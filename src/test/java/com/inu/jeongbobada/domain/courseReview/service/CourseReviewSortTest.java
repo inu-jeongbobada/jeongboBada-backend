@@ -1,6 +1,6 @@
 package com.inu.jeongbobada.domain.courseReview.service;
 
-import com.inu.jeongbobada.domain.course.exception.CourseException;
+import com.inu.jeongbobada.domain.course.exception.CourseErrorCode;
 import com.inu.jeongbobada.domain.course.repository.CourseOfferingRepository;
 import com.inu.jeongbobada.domain.course.repository.CourseRepository;
 import com.inu.jeongbobada.domain.courseReview.entity.CourseReview;
@@ -55,7 +55,7 @@ class CourseReviewSortTest {
     void missingCourseReturnsNotFound() {
         assertThatThrownBy(() -> service.getReviews(1L, ReviewSort.LATEST))
             .isInstanceOfSatisfying(BusinessException.class,
-                ex -> assertThat(ex.getErrorCode()).isEqualTo(CourseException.COURSE_NOT_FOUND));
+                ex -> assertThat(ex.getErrorCode()).isEqualTo(CourseErrorCode.COURSE_NOT_FOUND));
         verifyNoInteractions(reviews);
     }
 

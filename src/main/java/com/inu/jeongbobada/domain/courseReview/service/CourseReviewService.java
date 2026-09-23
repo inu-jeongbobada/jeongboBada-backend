@@ -3,7 +3,7 @@ package com.inu.jeongbobada.domain.courseReview.service;
 import com.inu.jeongbobada.domain.courseReview.dto.request.ReviewCreateReqDto;
 import com.inu.jeongbobada.domain.courseReview.dto.response.ReviewResDto;
 import com.inu.jeongbobada.domain.course.entity.Course;
-import com.inu.jeongbobada.domain.course.exception.CourseException;
+import com.inu.jeongbobada.domain.course.exception.CourseErrorCode;
 import com.inu.jeongbobada.domain.course.repository.CourseOfferingRepository;
 import com.inu.jeongbobada.domain.course.repository.CourseRepository;
 import com.inu.jeongbobada.domain.courseReview.entity.CourseReview;
@@ -38,14 +38,14 @@ public class CourseReviewService {
 
         //  후기를 작성할 과목이 존재하는지 확인
         Course course = courseRepository.findById(courseId)
-            .orElseThrow(() -> new BusinessException(CourseException.COURSE_NOT_FOUND));
+            .orElseThrow(() -> new BusinessException(CourseErrorCode.COURSE_NOT_FOUND));
 
         Professor professor = professorRepository.findById(request.professorId())
             .orElseThrow(() -> new BusinessException(ProfessorErrorCode.PROFESSOR_NOT_FOUND));
 
         // 이 교수가 실제로 이 과목을 개설한 적 있는지 확인 (엉뚱한 과목-교수 조합으로 후기가 달리는 것 방지)
         courseOfferingRepository.findByCourse_CourseIdAndProfessor_ProfessorId(courseId, professor.getProfessorId())
-            .orElseThrow(() -> new BusinessException(CourseException.COURSE_OFFERING_NOT_FOUND));
+            .orElseThrow(() -> new BusinessException(CourseErrorCode.COURSE_OFFERING_NOT_FOUND));
 
         CourseReview review = new CourseReview(
             user,
@@ -74,7 +74,7 @@ public class CourseReviewService {
     public List<ReviewResDto> getReviews(Long courseId, ReviewSort sort) {
         // 없는 과목은 404 예외처리  존재하지만 후기가 없는 과목은 빈 목록을 반환
         if (!courseRepository.existsById(courseId)) {
-            throw new BusinessException(CourseException.COURSE_NOT_FOUND);
+            throw new BusinessException(CourseErrorCode.COURSE_NOT_FOUND);
         }
 
         // 별점순 최신순 날짜순 으로 조회

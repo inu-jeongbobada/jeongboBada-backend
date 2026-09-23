@@ -6,12 +6,12 @@ import org.springframework.http.HttpStatus;
 @Getter
 public enum GlobalErrorCode implements BaseErrorCode {
 
-    INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "COMMON_400", "잘못된 입력값입니다"), // 400
-    RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "COMMON_404", "요청하신 경로를 찾을 수 없습니다"), // 404
-    METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "COMMON_405", "지원하지 않는 HTTP 메서드입니다"), // 405
-    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "COMMON_500", "서버 내부 오류가 발생했습니다"), // 500
-    UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "COMMON_401", "인증이 필요합니다"), // 401
-    FORBIDDEN(HttpStatus.FORBIDDEN, "COMMON_403", "권한이 없습니다"), // 403
+    INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "INVALID_INPUT_VALUE", "잘못된 입력값입니다"), // 400
+    RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "API_NOT_FOUND", "요청하신 경로를 찾을 수 없습니다"), // 404
+    METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "METHOD_NOT_ALLOWED", "지원하지 않는 HTTP 메서드입니다"), // 405
+    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다"), // 500
+    UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "AUTHENTICATION_REQUIRED", "인증이 필요합니다"), // 401
+    FORBIDDEN(HttpStatus.FORBIDDEN, "FORBIDDEN", "권한이 없습니다"), // 403
     ;
 
     private final HttpStatus httpStatus;

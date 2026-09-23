@@ -4,7 +4,7 @@
 
 ## 1. 인증 (user)
 공통 응답 포맷: `{ "success": boolean, "data": T, "code": string | null, "message": string | null }`
-(`success: false`일 때 `code`/`message`에 에러 정보)
+(`success: false`일 때 `code`/`message`에 에러 정보 — 아래 [에러 코드](#에러-코드) 표 참고)
 
 | Method | Path | 설명 | Request | Response | 상태 |
 |---|---|---|---|---|---|
@@ -23,8 +23,8 @@
 - 회원가입에 `email`이 **필수**로 추가됨 (비밀번호 찾기용). 이미 가입된 이메일이면 409. 대소문자/앞뒤 공백은 무시하고 비교
 - 비밀번호 찾기: `send-code`는 **학번이 없거나 이메일이 달라도, 메일 발송이 실패해도 항상 같은 200** (가입 여부 노출 방지). 인증코드는 6자리, 5분 유효, 재발송은 60초 뒤부터
 - 비밀번호 찾기: 서버는 `verify-code` 통과를 기억하지 않는다 — 화면에서 다음 단계로 넘어가는 용도이고, 재설정 요청(`/api/auth/password-reset`)에도 **같은 `code`를 다시 보내야** 한다
-- 인증코드가 없음/만료/불일치/없는 학번인 경우 모두 400 `USER_400`으로 동일하게 응답. 5번 틀리면 코드가 폐기되어 다시 발송받아야 함. 재설정 성공 시 기존 로그인(refresh token)은 모두 무효화
-- 이메일 등록/변경: 코드는 **새 이메일**로 발송. 현재 이메일과 같으면 400, 이미 쓰는 이메일이면 409, 60초 안에 재요청하면 429, 발송 실패는 503. 변경 시 코드를 받은 이메일과 같은 `newEmail`이어야 하고, 현재 비밀번호가 틀리면 401. 이메일이 없는 기존 계정도 같은 API로 처음 등록
+- 인증코드가 없음/만료/불일치/없는 학번인 경우 모두 400 `INVALID_VERIFICATION_CODE`로 동일하게 응답. 5번 틀리면 코드가 폐기되어 다시 발송받아야 함. 재설정 성공 시 기존 로그인(refresh token)은 모두 무효화
+- 이메일 등록/변경: 코드는 **새 이메일**로 발송. 현재 이메일과 같으면 400, 이미 쓰는 이메일이면 409, 60초 안에 재요청하면 429, 발송 실패는 503. 변경 시 코드를 받은 이메일과 같은 `newEmail`이어야 하고, 현재 비밀번호가 틀리면 400(`CURRENT_PASSWORD_MISMATCH`). 이메일이 없는 기존 계정도 같은 API로 처음 등록
 - 로그인/재발급 응답의 `refreshToken`은 studentId처럼 민감정보 취급 — 화면에 노출하지 말고 저장 용도로만 사용
 - 아직 인증 필터가 없어서(작업 중), 로그인 없이도 모든 API가 열려있는 상태. 추후 로그인 필요한 API가 생기면 이 문서에 표시 예정
 
@@ -62,6 +62,39 @@
 ## 6. 마이페이지 (mypage)
 | Method | Path | 설명 | 상태 |
 |---|---|---|---|
+
+## 에러 코드
+공통 응답 포맷: `{ "success": false, "data": null, "code": "...", "message": "..." }`
+
+- **프론트는 `code`로 분기한다.** `message`는 사용자에게 보여줄 문구라 바뀔 수 있다.
+- 상황 하나에 code 하나. HTTP 상태는 응답 status에 있으므로 code에 넣지 않는다 (#115).
+- 새 에러를 추가할 때도 이 규칙을 따르고 이 표에 한 줄 추가한다.
+
+| HTTP | code | 상황 |
+|---|---|---|
+| 400 | `INVALID_INPUT_VALUE` | 요청 값 검증 실패, 잘못된 JSON·타입, 필수 헤더 누락 |
+| 401 | `AUTHENTICATION_REQUIRED` | 로그인이 필요한 API에 토큰 없음/만료/위조 → **토큰 재발급 시도** |
+| 403 | `FORBIDDEN` | 권한 부족 |
+| 404 | `API_NOT_FOUND` | 존재하지 않는 경로 |
+| 405 | `METHOD_NOT_ALLOWED` | 지원하지 않는 HTTP 메서드 |
+| 500 | `INTERNAL_SERVER_ERROR` | 서버 내부 오류 |
+| 400 | `INVALID_VERIFICATION_CODE` | 인증코드 없음/만료/불일치 (사유는 구분하지 않음) |
+| 400 | `SAME_EMAIL` | 현재 이메일과 같은 이메일로 변경 요청 |
+| 400 | `CURRENT_PASSWORD_MISMATCH` | 비밀번호·이메일 변경 시 현재 비밀번호 불일치 (401 아님 — 재발급 대상 아님) |
+| 401 | `INVALID_CREDENTIALS` | 로그인 실패 (학번 없음과 비밀번호 틀림을 구분하지 않음) |
+| 401 | `INVALID_REFRESH_TOKEN` | refresh token 무효/만료 → **로그아웃 처리** |
+| 404 | `USER_NOT_FOUND` | 존재하지 않는 사용자 |
+| 409 | `DUPLICATE_STUDENT_ID` | 이미 가입된 학번 |
+| 409 | `DUPLICATE_NICKNAME` | 이미 사용 중인 닉네임 |
+| 409 | `DUPLICATE_EMAIL` | 이미 사용 중인 이메일 |
+| 429 | `VERIFICATION_CODE_RESEND_TOO_FAST` | 인증코드 재발송 60초 제한 |
+| 503 | `EMAIL_SEND_FAILED` | 메일 발송 실패 |
+| 404 | `PROFESSOR_NOT_FOUND` | 존재하지 않는 교수 |
+| 404 | `COURSE_NOT_FOUND` | 존재하지 않는 과목 |
+| 404 | `COURSE_OFFERING_NOT_FOUND` | 해당 교수가 개설한 과목이 아님 |
+| 404 | `PROFESSOR_COMMENT_NOT_FOUND` | 존재하지 않는 교수 후기 |
+| 403 | `PROFESSOR_COMMENT_FORBIDDEN` | 본인이 쓴 교수 후기가 아님 |
+| 404 | `PROFESSOR_COMMENT_PROFESSOR_MISMATCH` | URL의 교수와 후기의 교수가 다름 (작성자 확인이 먼저라 남의 후기면 403이 먼저 나감) |
 
 ## 작성 규칙
 - 엔드포인트 구현 시 "상태"를 "구현완료"로 바꾸고 요청/응답 예시를 아래에 추가한다.
