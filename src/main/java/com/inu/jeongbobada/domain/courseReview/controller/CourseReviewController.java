@@ -6,8 +6,10 @@ import com.inu.jeongbobada.domain.courseReview.enums.ReviewSort;
 import com.inu.jeongbobada.domain.courseReview.service.CourseReviewService;
 import com.inu.jeongbobada.domain.user.security.CustomUserDetails;
 import com.inu.jeongbobada.global.common.ApiResponse;
+import com.inu.jeongbobada.global.config.OpenApiConfig;
 import com.inu.jeongbobada.global.exception.BusinessException;
 import com.inu.jeongbobada.global.exception.code.GlobalErrorCode;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -24,6 +26,8 @@ public class CourseReviewController {
 
     //과목 후기 등록
 
+    // SecurityConfig에는 없고 컨트롤러에서 null 체크로 401 — Swagger에는 로그인 필요로 표시
+    @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME_NAME)
     @PostMapping("/{courseId}/reviews")
     // ApiResponse로 감싼 응답을 반환
     public ResponseEntity<ApiResponse<String>> createReview(

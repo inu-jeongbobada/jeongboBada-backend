@@ -3,9 +3,11 @@ package com.inu.jeongbobada.domain.professorComment.controller;
 import com.inu.jeongbobada.domain.professorComment.dto.ProfessorCommentCreateRequestDto;
 import com.inu.jeongbobada.domain.professorComment.dto.ProfessorCommentUpdateRequestDto;
 import com.inu.jeongbobada.domain.user.security.CustomUserDetails;
+import com.inu.jeongbobada.global.config.OpenApiConfig;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +15,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "professorComment", description = "professorComment 관련 API")
+// 작성·수정·삭제 모두 SecurityConfig에서 authenticated() — Swagger에도 로그인 필요로 표시
+@SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME_NAME)
 @RequestMapping("/api/professors/{professorId}/professor-comments")
 public interface ProfessorCommentControllerDocs {
     @Operation(summary = "professorComment create API")

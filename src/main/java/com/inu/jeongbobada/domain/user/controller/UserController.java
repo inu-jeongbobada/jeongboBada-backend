@@ -8,6 +8,8 @@ import com.inu.jeongbobada.domain.user.security.CustomUserDetails;
 import com.inu.jeongbobada.domain.user.service.EmailChangeService;
 import com.inu.jeongbobada.domain.user.service.UserService;
 import com.inu.jeongbobada.global.common.ApiResponse;
+import com.inu.jeongbobada.global.config.OpenApiConfig;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+// /api/users/me/** 는 SecurityConfig에서 authenticated() — Swagger에도 로그인 필요로 표시
+@SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME_NAME)
 @RestController
 @RequestMapping("/api/users/me")
 @RequiredArgsConstructor
