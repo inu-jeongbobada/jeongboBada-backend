@@ -72,11 +72,14 @@
 
 | HTTP | code | 상황 |
 |---|---|---|
-| 400 | `INVALID_INPUT_VALUE` | 요청 값 검증 실패, 잘못된 JSON·타입, 필수 헤더 누락 |
+| 400 | `INVALID_INPUT_VALUE` | 요청 값 검증 실패, 잘못된 JSON·타입, 필수 헤더·쿼리 파라미터 누락 |
 | 401 | `AUTHENTICATION_REQUIRED` | 로그인이 필요한 API에 토큰 없음/만료/위조 → **토큰 재발급 시도** |
 | 403 | `FORBIDDEN` | 권한 부족 |
 | 404 | `API_NOT_FOUND` | 존재하지 않는 경로 |
 | 405 | `METHOD_NOT_ALLOWED` | 지원하지 않는 HTTP 메서드 |
+| 406 | `NOT_ACCEPTABLE` | `Accept`가 JSON이 아님 (예: `application/xml`) |
+| 409 | `DUPLICATE_RESOURCE` | 동시 요청으로 DB UNIQUE 제약에 걸림 (가입 더블클릭 등). 사전 확인에 걸리면 도메인 코드(`DUPLICATE_NICKNAME` 등)가 나가고, 확인과 저장 사이에 다른 요청이 끼어든 경우에만 이 코드 |
+| 415 | `UNSUPPORTED_MEDIA_TYPE` | JSON을 받는 API에 `Content-Type`이 없거나 JSON이 아님 |
 | 500 | `INTERNAL_SERVER_ERROR` | 서버 내부 오류 |
 | 400 | `INVALID_VERIFICATION_CODE` | 인증코드 없음/만료/불일치 (사유는 구분하지 않음) |
 | 400 | `SAME_EMAIL` | 현재 이메일과 같은 이메일로 변경 요청 |
