@@ -3,7 +3,7 @@
 개발 우선순위(CLAUDE.md)에 맞춰 도메인별로 채워 나간다.
 
 ## 1. 인증 (user)
-공통 응답 포맷: `{ "success": boolean, "data": T, "code": string | null, "message": string | null }`
+공통 응답 포맷: `{ "success": boolean, "data": T, "code": string | null, "message": string | null, "errors"?: [{ "field", "message" }] }`
 (`success: false`일 때 `code`/`message`에 에러 정보 — 아래 [에러 코드](#에러-코드) 표 참고)
 
 | Method | Path | 설명 | Request | Response | 상태 |
@@ -64,9 +64,26 @@
 |---|---|---|---|
 
 ## 에러 코드
-공통 응답 포맷: `{ "success": false, "data": null, "code": "...", "message": "..." }`
+공통 응답 포맷: `{ "success": false, "data": null, "code": "...", "message": "...", "errors"?: [...] }` (`errors`는 필드별 오류가 있을 때만)
 
 - **프론트는 `code`로 분기한다.** `message`는 사용자에게 보여줄 문구라 바뀔 수 있다.
+- **필드별 오류 `errors`** (#111): 입력값 문제로 400이 날 때, 어느 필드가 왜 잘못됐는지 `errors: [{ "field", "message" }]`로 함께 내려간다. 해당 없는 에러에는 `errors` 키 자체가 없다.
+  - `message`는 대표 문구(첫 번째 오류)라서, 폼 칸마다 표시하려면 `errors`를 쓴다. 여러 필드가 틀리면 전부 들어 있다.
+  - `field`는 JSON 필드 이름(`studentId`, 중첩이면 `reviews[0].rating`)이거나 경로 변수·쿼리 파라미터 이름(`courseId`, `sort`)이다.
+  - enum 값이 틀리면 허용 값을 알려준다: `'rating' 값은 ONE, TWO, THREE, FOUR, FIVE 중 하나여야 합니다`
+  - body가 없거나 JSON이 깨지면 `errors` 없이 `요청 본문이 비어 있거나 JSON 형식이 올바르지 않습니다`
+
+```json
+{
+  "success": false,
+  "code": "INVALID_INPUT_VALUE",
+  "message": "학번은 필수입니다.",
+  "errors": [
+    { "field": "studentId", "message": "학번은 필수입니다." },
+    { "field": "email", "message": "이메일은 필수입니다." }
+  ]
+}
+```
 - 상황 하나에 code 하나. HTTP 상태는 응답 status에 있으므로 code에 넣지 않는다 (#115).
 - 새 에러를 추가할 때도 이 규칙을 따르고 이 표에 한 줄 추가한다.
 
