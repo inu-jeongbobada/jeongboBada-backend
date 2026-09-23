@@ -44,18 +44,19 @@ class ApiResponseTest {
     }
 
     @Test
-    void error_응답은_data는_숨기고_message만_내려간다() throws Exception {
+    void error_응답은_data는_숨기고_code와_바꾼_message가_내려간다() throws Exception {
         // given
-        String message = "잘못된 요청입니다";
+        String message = "학번은 필수입니다.";
 
         // when
-        ApiResponse<Void> response = ApiResponse.error(HttpStatus.BAD_REQUEST, message);
+        ApiResponse<Void> response = ApiResponse.error(GlobalErrorCode.INVALID_INPUT_VALUE, message);
         JsonNode json = objectMapper.readTree(objectMapper.writeValueAsString(response));
 
         // then
         assertThat(response.httpStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.success()).isFalse();
         assertThat(json.has("data")).isFalse();
+        assertThat(json.get("code").asText()).isEqualTo("INVALID_INPUT_VALUE");
         assertThat(json.get("message").asText()).isEqualTo(message);
     }
 

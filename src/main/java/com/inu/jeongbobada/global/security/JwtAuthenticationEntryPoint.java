@@ -27,7 +27,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         HttpServletResponse response,
         AuthenticationException authException
     ) throws IOException {
-        ApiResponse<Void> body = ApiResponse.error(GlobalErrorCode.UNAUTHORIZED);
+        ApiResponse<Void> body = ApiResponse.error(GlobalErrorCode.AUTHENTICATION_REQUIRED);
 
         response.setStatus(body.httpStatus().value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);

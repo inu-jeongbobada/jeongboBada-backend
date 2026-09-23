@@ -65,7 +65,7 @@ class ProfessorCommentControllerTest {
             .andExpect(jsonPath("$.success").value(false))
             .andExpect(
                 jsonPath("$.code")
-                    .value(GlobalErrorCode.UNAUTHORIZED.getCode())
+                    .value(GlobalErrorCode.AUTHENTICATION_REQUIRED.getCode())
             );
     }
 

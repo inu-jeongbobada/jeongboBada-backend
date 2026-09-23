@@ -45,7 +45,7 @@ public class EmailChangeService {
 
         LocalDateTime now = LocalDateTime.now();
         if (codeManager.isWithinResendCooldown(user.getEmailChangeCode(), now)) {
-            throw new BusinessException(UserErrorCode.CODE_RESEND_TOO_FAST);
+            throw new BusinessException(UserErrorCode.VERIFICATION_CODE_RESEND_TOO_FAST);
         }
 
         String code = codeManager.generateCode();
@@ -65,7 +65,7 @@ public class EmailChangeService {
         User user = getUser(userId);
 
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
-            throw new BusinessException(UserErrorCode.PASSWORD_MISMATCH);
+            throw new BusinessException(UserErrorCode.CURRENT_PASSWORD_MISMATCH);
         }
 
         // 코드를 받은 이메일과 다른 주소로 바꾸려는 요청은 코드 시도로 세지 않고 바로 거부
