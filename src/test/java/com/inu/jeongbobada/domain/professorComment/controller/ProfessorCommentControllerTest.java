@@ -14,6 +14,7 @@ import com.inu.jeongbobada.global.security.SecurityConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -31,7 +32,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+// test 프로필: SecurityConfig가 JwtProperties(jwt.secret 필수 검증)를 등록해서, CI에서도 값이 있도록 application-test.properties를 쓴다
 @WebMvcTest(ProfessorCommentController.class)
+@ActiveProfiles("test")
 @Import({
     SecurityConfig.class,
     JwtAuthenticationFilter.class,

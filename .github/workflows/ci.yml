@@ -72,3 +72,25 @@ jobs:
             build/reports/tests/test
             build/test-results/test
           retention-days: 7
+
+  # docker compose로 MySQL + backend를 실제로 띄워 기동되는지 확인한다 (#93).
+  # 로컬 실행(application.yml)과 docker compose(환경변수)는 설정을 받는 방식이 달라서,
+  # docker-compose.yml에 새 설정값을 빼먹으면 위 빌드는 통과해도 컨테이너는 기동에 실패한다.
+  # 위 build 잡과 병렬로 돈다.
+  compose-smoke:
+    name: docker compose 기동 스모크
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: 체크아웃
+        uses: actions/checkout@v7
+
+      - name: .env 준비
+        # .env.example의 JWT_SECRET은 기본값이 없어서 CI 전용 임시값을 넣는다 (실제 시크릿 아님).
+        run: |
+          cp .env.example .env
+          sed -i 's/^JWT_SECRET=.*/JWT_SECRET=ci-smoke-only-secret-key-at-least-32-bytes-long/' .env
+
+      - name: 기동 및 확인
+        run: bash scripts/ci/compose-smoke.sh
