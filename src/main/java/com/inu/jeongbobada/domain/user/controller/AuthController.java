@@ -1,14 +1,14 @@
 package com.inu.jeongbobada.domain.user.controller;
 
 import com.inu.jeongbobada.domain.user.dto.LoginRequest;
+import com.inu.jeongbobada.domain.user.dto.LogoutRequest;
 import com.inu.jeongbobada.domain.user.dto.NicknameCheckResponse;
 import com.inu.jeongbobada.domain.user.dto.ReissueRequest;
 import com.inu.jeongbobada.domain.user.dto.SignupRequest;
 import com.inu.jeongbobada.domain.user.dto.TokenResponse;
 import com.inu.jeongbobada.domain.user.service.AuthService;
 import com.inu.jeongbobada.global.common.ApiResponse;
-import com.inu.jeongbobada.global.config.OpenApiConfig;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import com.inu.jeongbobada.global.exception.code.GlobalErrorCode;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -55,19 +55,31 @@ public class AuthController {
         return ResponseEntity.status(response.httpStatus()).body(response);
     }
 
-    // 아직 인증 필터(SecurityContext에 유저 채워주는 필터)가 없어서,
-    // Authorization 헤더의 access token을 여기서 직접 파싱해 studentId를 얻는다.
-    // 나중에 JWT 필터가 생기면 @AuthenticationPrincipal 등으로 대체할 것.
-    @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME_NAME)
+    // 로그아웃: 서버에 저장된 refresh token을 지운다. 둘 중 하나로 사용자를 찾는다.
+    //   1) body의 refreshToken (권장) — access token이 만료돼도 로그아웃된다 (#129)
+    //   2) Authorization 헤더의 access token (예전 방식, 하위 호환) — access가 만료됐으면 아무것도 지우지 못한다
+    // 둘 다 없으면 400. 찾지 못해도(이미 로그아웃·만료 등) 로그아웃은 항상 성공(200)으로 응답한다.
+    // access token이 필수가 아니므로 Swagger 자물쇠는 달지 않는다.
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(
-        @RequestHeader("Authorization") String authorizationHeader
+        @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
+        @RequestBody(required = false) LogoutRequest request
     ) {
-        String accessToken = authorizationHeader.replaceFirst("^Bearer ", "");
-        authService.logout(accessToken);
+        String refreshToken = request != null ? request.refreshToken() : null;
+        String accessToken = authorizationHeader != null ? authorizationHeader.replaceFirst("^Bearer ", "") : null;
+        if (isBlank(refreshToken) && isBlank(accessToken)) {
+            ApiResponse<Void> error = ApiResponse.error(GlobalErrorCode.INVALID_INPUT_VALUE,
+                "로그아웃할 refreshToken(body) 또는 Authorization 헤더가 필요합니다");
+            return ResponseEntity.status(error.httpStatus()).body(error);
+        }
+        authService.logout(refreshToken, accessToken);
 
         ApiResponse<Void> response = ApiResponse.ok(null);
         return ResponseEntity.status(response.httpStatus()).body(response);
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 
 }

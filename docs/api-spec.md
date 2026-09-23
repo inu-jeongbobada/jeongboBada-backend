@@ -12,7 +12,7 @@
 | POST | /api/auth/signup | 회원가입 (학번 기반) | { <br/> "studentId": "202012345", <br/> "password": "영문+숫자 8~64자", <br/> "nickname": "한글/영문/숫자/-/_  2~10자", <br/> "email": "user@example.com" <br/>} | 201 <br/> { "success": true, "data": null } | 구현완료 |
 | POST | /api/auth/login | 로그인 (JWT 발급) | { <br/> "studentId": "202012345", <br/> "password": "..." <br/>} | 200 <br/> { "success": true, "data": { <br/> "accessToken": "eyJ...", <br/> "refreshToken": "eyJ..." <br/>} } | 구현완료 |
 | POST | /api/auth/reissue | Access Token 재발급 | { <br/> "refreshToken": "eyJ..." <br/>} | 200 <br/> { "success": true, "data": { <br/> "accessToken": "eyJ...", <br/> "refreshToken": "eyJ..." <br/>} } | 구현완료 |
-| POST | /api/auth/logout | 로그아웃 | Header: <br/> `Authorization: Bearer {accessToken}` | 200 <br/> { "success": true, "data": null } | 구현완료 |
+| POST | /api/auth/logout | 로그아웃 (서버의 refresh token 무효화) | { <br/> "refreshToken": "..." <br/>} (권장) <br/> 또는 Header: `Authorization: Bearer {accessToken}` (예전 방식) | 200 <br/> { "success": true, "data": null } <br/> 둘 다 없으면 400 | 구현완료 |
 | POST | /api/auth/password-reset/send-code | 비밀번호 찾기 ① 인증코드 발송 | { <br/> "studentId": "202012345", <br/> "email": "가입 때 등록한 이메일" <br/>} | 200 <br/> { "success": true, "data": null } | 구현완료 |
 | POST | /api/auth/password-reset/verify-code | 비밀번호 찾기 ② 인증코드 확인 (코드는 소모되지 않음) | { <br/> "studentId": "202012345", <br/> "code": "숫자 6자리" <br/>} | 200 <br/> { "success": true, "data": null } | 구현완료 |
 | POST | /api/auth/password-reset | 비밀번호 찾기 ③ 비밀번호 재설정 (코드 1회 소모) | { <br/> "studentId": "202012345", <br/> "code": "숫자 6자리", <br/> "newPassword": "영문+숫자 8~64자" <br/>} | 200 <br/> { "success": true, "data": null } | 구현완료 |
@@ -75,7 +75,10 @@
 - **사용자당 refresh token은 1개**다. 다른 기기에서 로그인하거나 재발급하면 이전 refresh는 무효가 된다.
 - **비밀번호 변경·비밀번호 재설정에 성공하면** 서버의 refresh가 지워져서 모든 기기에서 다시 로그인해야 한다.
 - **로그인이 필요 없는 API**는 토큰이 만료·위조돼도 무시하고 정상 응답한다 (401이 나지 않는다).
-- **로그아웃**(`POST /api/auth/logout`, `Authorization` 헤더 필수)은 서버의 refresh를 지운다. 단, **access token이 이미 만료된 상태면 아무것도 지우지 않고 200**을 준다 — 그 refresh는 만료(14일)까지 서버에서 유효하게 남는다. 프론트는 응답과 상관없이 기기의 토큰을 지운다.
+- **로그아웃**(`POST /api/auth/logout`)은 서버의 refresh를 지운다. **body에 `refreshToken`을 보내는 방식을 권장**한다 — access token이 만료됐어도 로그아웃된다 (#129).
+  - 예전 방식(`Authorization` 헤더만)도 계속 받지만, access token이 만료된 상태면 사용자를 특정하지 못해 **아무것도 지우지 못한다** (refresh가 만료까지 서버에 남음).
+  - 이미 로그아웃됐거나 교체된 예전 refresh를 보내도 200이다 (다른 기기의 현재 로그인은 끊지 않는다). 둘 다 없으면 400 `INVALID_INPUT_VALUE`.
+  - 프론트는 응답과 상관없이 기기의 토큰을 지운다.
 
 ### 401을 받았을 때 (프론트 인터셉터 기준)
 `code`로 구분한다. 401이라고 모두 재발급 대상이 아니다.

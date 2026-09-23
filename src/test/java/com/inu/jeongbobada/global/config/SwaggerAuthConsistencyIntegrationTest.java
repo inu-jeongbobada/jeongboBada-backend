@@ -38,10 +38,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 class SwaggerAuthConsistencyIntegrationTest {
 
     // 자물쇠가 있지만 토큰이 없을 때 401이 아닌 다른 4xx로 끝나는 API와 그 이유
-    private static final Map<String, Integer> SECURED_BUT_NOT_401 = Map.of(
-        // Authorization 헤더를 @RequestHeader(필수)로 직접 받고 /api/auth/**는 permitAll이라, 헤더가 없으면 400 (#111)
-        "POST /api/auth/logout", 400
-    );
+    // (예: "POST /api/some/path", 400 — 이유를 주석으로). 지금은 없다.
+    private static final Map<String, Integer> SECURED_BUT_NOT_401 = Map.of();
 
     @Autowired
     private MockMvc mockMvc;

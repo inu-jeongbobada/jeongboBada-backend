@@ -12,6 +12,7 @@ import com.inu.jeongbobada.global.exception.BusinessException;
 import com.inu.jeongbobada.global.security.JwtProperties;
 import com.inu.jeongbobada.global.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.Nullable;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -104,14 +105,31 @@ public class AuthService {
         return issueTokens(user);
     }
 
-    // access token으로 studentId를 뽑아서 해당 유저의 refresh token을 DB에서 제거(무효화)
+    // 로그아웃: refresh token(권장) 또는 access token(예전 방식)으로 사용자를 찾아 DB의 refresh token을 제거(무효화)
     @Transactional
-    public void logout(String accessToken) {
-        if (!jwtTokenProvider.validateToken(accessToken)) {
-            return; // 이미 무효한 토큰이면 조용히 종료
+    public void logout(@Nullable String refreshToken, @Nullable String accessToken) {
+        if (refreshToken != null && !refreshToken.isBlank()) {
+            revokeByRefreshToken(refreshToken);
+            return;
+        }
+        if (accessToken == null || !jwtTokenProvider.validateToken(accessToken)) {
+            return; // 만료·무효한 access token이면 사용자를 특정할 수 없어 조용히 종료 (refresh 방식을 권장하는 이유)
         }
         String studentId = jwtTokenProvider.getStudentId(accessToken);
         userRepository.findByStudentId(studentId)
+            .ifPresent(User::clearRefreshToken);
+    }
+
+    // refresh token으로 로그아웃: access token 만료 여부와 상관없이 지운다 (#129).
+    // DB에 저장된 값과 같을 때만 지운다 — 이미 교체된 예전 refresh로 요청하면, 그 사이 새로 로그인한
+    // 다른 기기의 현재 refresh까지 지워버리는 일을 막기 위해서다.
+    private void revokeByRefreshToken(String refreshToken) {
+        if (!jwtTokenProvider.validateToken(refreshToken)) {
+            return; // 만료·위조된 refresh는 어차피 재발급에 쓸 수 없다
+        }
+        String studentId = jwtTokenProvider.getStudentId(refreshToken);
+        userRepository.findByStudentId(studentId)
+            .filter(user -> refreshToken.equals(user.getRefreshToken()))
             .ifPresent(User::clearRefreshToken);
     }
 
