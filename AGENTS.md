@@ -75,6 +75,10 @@ PR에 아래 중 하나라도 있으면 **통합 테스트를 1개 이상** 붙�
   - 요청 DTO에 검증 애노테이션(`@NotNull`/`@NotBlank`/`@Size` 등)을 붙이고 컨트롤러 `@RequestBody`에 `@Valid`. 필수값 null이 서비스까지 내려가 500이 되는 게 가장 흔한 원인이다
   - `BadRequestSafetyNetIntegrationTest`가 **모든 API**에 잘못된 요청(body 없음·깨진 JSON·`{}`·`[]`·text/plain·경로 변수 문자열/범위 초과 × 토큰 유무)을 보내 500이 없는지 검사한다. 새 API도 자동으로 포함된다
   - 당장 못 고치는 500은 버그 이슈를 만들고 그 테스트의 `KNOWN_500`에 이슈 번호와 함께 등록한다. **고치면 반드시 제거한다** — 그 이슈 체크리스트에 "KNOWN_500에서 제거"를 적어둘 것 (테스트가 강제하지 못한다: 500 도달 여부가 DB 데이터에 따라 달라서)
+- **로그인이 필요한 API를 추가하면 Swagger 표시도 함께 단다.** 컨트롤러(또는 `*ControllerDocs`)의 클래스나 메서드에
+  `@SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME_NAME)`. 문서 전체에 거는 방식은 공개 API에도 자물쇠가 붙어서 쓰지 않는다 (#124)
+  - `SwaggerAuthConsistencyIntegrationTest`가 "자물쇠 표시 = 토큰 없이 401"인지 모든 API에 대해 검사한다
+  - 공통 에러 응답(400/401/500)은 `OpenApiConfig`가 자동으로 붙이므로 따로 문서화하지 않는다. 도메인 code(404·409 등)만 필요하면 `@ApiResponse`로 추가
 - **필터(`OncePerRequestFilter` 등)에서는 예외를 던지지 않는다.** 필터는 `GlobalExceptionHandler`보다 앞이라 예외가 500으로 샌다 (#110)
 - **Spring MVC 표준 예외에 `@ExceptionHandler`를 새로 달지 않는다.** `GlobalExceptionHandler`가 `ResponseEntityExceptionHandler`를 상속해 이미 처리하므로, 같은 타입에 또 달면 기동 시 ambiguous 오류가 난다. 메시지를 바꾸려면 부모의 `handleXxx`를 오버라이드한다 (#111)
 - **UNIQUE 컬럼은 서비스에서 사전 확인(`existsBy...`)하고 도메인 code(예: `DUPLICATE_NICKNAME`)로 응답한다.** 확인과 저장 사이 동시 요청 충돌은 전역 핸들러가 409 `DUPLICATE_RESOURCE`로 처리한다 (#109)
