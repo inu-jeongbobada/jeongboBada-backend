@@ -191,6 +191,28 @@ PASS 본인인증은 소모임 프로젝트 규모에 비해 비용·행정 부�
 - [ ] Refresh Token DB 평문 저장 → 해시(예: SHA-256) 저장으로 전환 검토
 - [ ] 정상·누락·변조·만료 토큰 자동 테스트 코드 (지금은 Postman 수동 확인만 함)
 
+### 9. 회원가입 보강 (중복확인 API, 이메일 인증 여부) — [이슈 #97](https://github.com/inu-jeongbobada/jeongboBada-backend/issues/97)
+
+**결정 사항**
+- **닉네임 중복확인 API만 제공.** 학번/이메일 중복확인 API는 만들지 않음 — "이 학번/이메일로 이미 가입돼 있다"를 누구나 조회 가능하게 하는 user enumeration이라서. 가입 시도 시 409로만 안내(기존 동작 유지)
+- **가입 시 이메일 인증은 하지 않음.** 이유:
+  1. 정보바다는 이미 재학생 인증(신분증/학과 확인 사진, [이슈 #98](https://github.com/inu-jeongbobada/jeongboBada-backend/issues/98))으로 사람이 검토하는 절차를 계획 중이라, 이메일 인증까지 더하면 가입 단계 마찰이 이중으로 커짐
+  2. `VerificationCode`를 `User` 행에 저장하는 현재 구조상, 가입 전(= User 행이 없는 시점) 인증은 저장 위치를 새로 설계해야 해서 구현 비용도 있음
+
+**알려진 한계 (의도적으로 미해결)**
+가입 시 이메일을 오타로 잘못 입력하고, 이후 비밀번호까지 잊어버리면 **자동 복구 수단이 없다.**
+- 비밀번호 찾기: 코드가 오타난(본인 소유 아닌) 이메일로 감 → 못 받음
+- 이메일 변경: `currentPassword` 확인이 필수([섹션 7](#7-비밀번호-찾기-이메일-인증-3순위--이슈-87) 참고) → 비밀번호를 모르면 못 바꿈
+- → 두 경로 다 막혀서 자력으로는 복구 불가능한 상태가 됨
+
+재학생 인증 서류를 계정 복구용으로 재요구하는 것도 검토했으나 **기각** — 단순 락아웃 하나 풀자고 무거운 재검증을 또 시키는 건 과함. 대신:
+- **지금은 정식 기능으로 안 만듦.** 발생하면 사용자가 다른 채널(카톡/디스코드 등)로 학번을 밝히고 문의 → 관리자가 DB에서 직접 비밀번호/이메일을 수동으로 고쳐주는 방식으로 대응 (소모임 규모라 감수 가능한 수준으로 판단)
+- [ ] [이슈 #98](https://github.com/inu-jeongbobada/jeongboBada-backend/issues/98)의 재학생 인증이 실제로 구현되면, 그때 보유하게 될 신원 확인 데이터를 정식 계정 복구 경로로 쓸지 재검토
+
+**구현 완료**
+- [x] `GET /api/auth/check-nickname?nickname=` (`{ "available": true|false }`) — `AuthController`/`AuthService.checkNicknameAvailability`, `UserRepository.existsByNickname`
+- [x] 통합 테스트(`CheckNicknameIntegrationTest`) — 미사용 닉네임/이미 가입된 닉네임 두 케이스
+
 # 예상 브랜치
 - feat/security-config
 - feat/auth-login

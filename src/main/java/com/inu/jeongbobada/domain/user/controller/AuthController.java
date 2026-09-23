@@ -1,6 +1,7 @@
 package com.inu.jeongbobada.domain.user.controller;
 
 import com.inu.jeongbobada.domain.user.dto.LoginRequest;
+import com.inu.jeongbobada.domain.user.dto.NicknameCheckResponse;
 import com.inu.jeongbobada.domain.user.dto.ReissueRequest;
 import com.inu.jeongbobada.domain.user.dto.SignupRequest;
 import com.inu.jeongbobada.domain.user.dto.TokenResponse;
@@ -23,6 +24,15 @@ public class AuthController {
         authService.signup(request);
 
         ApiResponse<Void> response = ApiResponse.created(null);
+        return ResponseEntity.status(response.httpStatus()).body(response);
+    }
+
+    // 가입 폼에서 제출 전 실시간으로 사용 가능 여부를 확인하는 용도. 학번/이메일은 user enumeration 방지를 위해 제공하지 않음 (docs/auth-architecture.md 9번 참고)
+    @GetMapping("/check-nickname")
+    public ResponseEntity<ApiResponse<NicknameCheckResponse>> checkNickname(@RequestParam String nickname) {
+        NicknameCheckResponse checkResponse = authService.checkNicknameAvailability(nickname);
+
+        ApiResponse<NicknameCheckResponse> response = ApiResponse.ok(checkResponse);
         return ResponseEntity.status(response.httpStatus()).body(response);
     }
 
