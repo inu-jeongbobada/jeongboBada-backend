@@ -68,7 +68,7 @@ CourseReview (기존 + professor 추가)
 - [x] `CourseReview`에 `professor` FK 추가, unique 제약 `(user, course, professor)`로 변경
 - [x] `POST .../reviews`에 `professorId` 검증 로직 추가 (컴파일/단위테스트만 확인, **실제 로그인 붙여서 수동 테스트는 아직 안 함**)
 - [x] 강의평 작성 요청 검증·중복 작성 409 (#105) — 통합 테스트 `CourseReviewCreateIntegrationTest`
-- [ ] 엔티티 검증 실패(`ConstraintViolationException`)를 400 → 500으로 전환 — #139
+- [x] 엔티티 검증 실패(`ConstraintViolationException`)를 400 → 500으로 전환 (#139) — 입력 검증은 요청 DTO가 맡고, 엔티티 검증 실패는 서버 버그로 본다
 - [x] `data.sql`을 새 스키마(course + course_offering)로 재작성
 - [ ] 매 학기 엑셀(종합강의시간표) import 파이프라인 — courseCode로 Course 매칭, (course,professor,year,semester)로 CourseOffering upsert. **아직 미구현, 이번 작업 범위 밖.**
 - [ ] `CourseCreateReqDto`/`CourseUpdateReqDto` — 기존 flat 구조 그대로 남아있음(컨트롤러에 안 붙어있어서 컴파일은 됨). 관리자 등록 API를 실제로 만들 때 Course/CourseOffering 분리 구조에 맞게 다시 설계해야 함.

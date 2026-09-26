@@ -5,9 +5,6 @@ import com.inu.jeongbobada.global.common.ApiResponse;
 import com.inu.jeongbobada.global.common.ApiResponse.FieldError;
 import com.inu.jeongbobada.global.exception.code.BaseErrorCode;
 import com.inu.jeongbobada.global.exception.code.GlobalErrorCode;
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.ConstraintViolationException;
-import jakarta.validation.Path;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.TypeMismatchException;
@@ -69,17 +66,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(response.httpStatus()).body(response);
     }
 
-    // 엔티티 저장 시점의 Bean Validation 실패도 잘못된 입력값(400)으로 응답한다.
-    @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<ApiResponse<Void>> handleConstraintViolationException(ConstraintViolationException e) {
-        List<FieldError> errors = e.getConstraintViolations().stream()
-                .map(violation -> new FieldError(lastNodeName(violation), violation.getMessage()))
-                .toList();
-
-        ApiResponse<Void> response = invalidInput(errors);
-        return ResponseEntity.status(response.httpStatus()).body(response);
-    }
-
     // 서비스의 사전 중복 확인(findBy...)을 통과했지만 저장 순간 다른 요청이 먼저 넣어서 UNIQUE 제약에 걸린 경우 (동시 요청).
     // 어떤 필드가 겹쳤는지는 알려주지 않는다 — 더블클릭이면 첫 요청이 이미 성공했고, 도메인 제약 이름을 global이 알 필요도 없다.
     // UNIQUE가 아닌 무결성 위반(NOT NULL, FK 등)은 클라이언트가 고칠 수 있는 문제가 아니라 서버 버그라 500으로 둔다.
@@ -96,6 +82,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(response.httpStatus()).body(response);
     }
 
+    // 엔티티 저장 시점의 Bean Validation 실패(ConstraintViolationException)도 여기서 500 — 잘못된 엔티티는 서버 버그다.
+    // 클라이언트 입력 검증은 요청 DTO + @Valid(MethodArgumentNotValidException, 400)가 맡는다 (#139)
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleException(Exception e) {
         log.error("Unhandled exception", e);
@@ -254,14 +242,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             }
         }
         return sb.toString();
-    }
-
-    private static @Nullable String lastNodeName(ConstraintViolation<?> violation) {
-        String name = null;
-        for (Path.Node node : violation.getPropertyPath()) {
-            name = node.getName();
-        }
-        return name;
     }
 
     private static <T extends Throwable> @Nullable T findCause(Throwable e, Class<T> type) {
