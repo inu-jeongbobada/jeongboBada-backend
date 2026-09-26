@@ -6,7 +6,6 @@ import jakarta.validation.constraints.Size;
 
 
 // 필수 여부·길이는 CourseReview 엔티티(nullable = false, content 20~500자)와 같게 둔다 (#105).
-// 어떤 항목을 필수로 둘지는 #106(시안↔API 정렬)에서 바뀔 수 있다 — 바꿀 때는 엔티티와 함께 바꾼다.
 public record ReviewCreateReqDto(
 
     // 같은 과목이라도 담당 교수가 여러 명일 수 있어서, 어느 교수님 강의에 대한 후기인지 명시한다.

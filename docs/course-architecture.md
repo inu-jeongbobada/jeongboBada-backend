@@ -57,7 +57,7 @@ CourseReview (기존 + professor 추가)
 - `GET /api/courses/{courseId}` — Course 기본 정보 + 그 과목의 활성 `CourseOffering` 목록(교수/시간표/학점 등)을 함께 반환.
 - `POST /api/courses/{courseId}/reviews` — 요청 바디에 `professorId`가 추가됨 (같은 과목도 교수마다 리뷰를 따로 남길 수 있어서). 서버는 그 `(course, professor)` 조합으로 실제 개설된 적이 있는지(`CourseOffering` 존재 여부) 검증 후 저장.
   - 로그인 필요 — `SecurityConfig`에서 **POST만** `authenticated()` (조회 GET은 공개). 컨트롤러 null 체크 대신 여기서 막아야 토큰 없는 잘못된 요청이 400이 아니라 401이 된다.
-  - 요청 DTO(`ReviewCreateReqDto`)에 엔티티와 같은 필수·길이 검증 + `@Valid` → 누락 시 500이 아니라 400(`errors`에 필드) (#105). 어떤 항목을 필수로 둘지는 #106에서 바뀔 수 있다.
+  - 요청 DTO(`ReviewCreateReqDto`)에 엔티티와 같은 필수·길이 검증 + `@Valid` → 누락 시 500이 아니라 400(`errors`에 필드) (#105).
   - 같은 `(user, course, professor)`로 이미 썼으면 서비스 사전 확인에서 409 `DUPLICATE_COURSE_REVIEW`.
 
 ## 구현 상태
@@ -68,7 +68,7 @@ CourseReview (기존 + professor 추가)
 - [x] `CourseReview`에 `professor` FK 추가, unique 제약 `(user, course, professor)`로 변경
 - [x] `POST .../reviews`에 `professorId` 검증 로직 추가 (컴파일/단위테스트만 확인, **실제 로그인 붙여서 수동 테스트는 아직 안 함**)
 - [x] 강의평 작성 요청 검증·중복 작성 409 (#105) — 통합 테스트 `CourseReviewCreateIntegrationTest`
-- [ ] 엔티티 검증 실패(`ConstraintViolationException`)를 400 → 500으로 전환 (#105 마지막 단계). DTO 검증이 들어갔으니 이제 가능하지만, 전역 핸들러 변경이라 별도 PR로
+- [ ] 엔티티 검증 실패(`ConstraintViolationException`)를 400 → 500으로 전환 — #139
 - [x] `data.sql`을 새 스키마(course + course_offering)로 재작성
 - [ ] 매 학기 엑셀(종합강의시간표) import 파이프라인 — courseCode로 Course 매칭, (course,professor,year,semester)로 CourseOffering upsert. **아직 미구현, 이번 작업 범위 밖.**
 - [ ] `CourseCreateReqDto`/`CourseUpdateReqDto` — 기존 flat 구조 그대로 남아있음(컨트롤러에 안 붙어있어서 컴파일은 됨). 관리자 등록 API를 실제로 만들 때 Course/CourseOffering 분리 구조에 맞게 다시 설계해야 함.
