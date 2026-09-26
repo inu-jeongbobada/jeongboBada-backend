@@ -51,10 +51,7 @@ class BadRequestSafetyNetIntegrationTest {
     // 이슈가 해결되면 반드시 여기서 지운다 (그 이슈의 체크리스트에 적어둘 것).
     // "이제 500이 아니면 실패"로 강제하지 않는 이유: 500까지 도달하는지가 DB 데이터에 따라 달라진다.
     // 예) 강의평 {}는 과목 1번이 있어야 서비스까지 가서 500이 나는데, CI의 빈 DB에서는 404로 먼저 끝난다.
-    private static final Map<String, String> KNOWN_500 = Map.of(
-        // 요청 DTO에 검증이 없어 professorId null이 서비스까지 내려가 findById(null)에서 500
-        "POST /api/courses/{courseId}/reviews EMPTY_OBJECT", "#105"
-    );
+    private static final Map<String, String> KNOWN_500 = Map.of();
 
     // 잘못된 요청 유형. body를 받는 메서드(POST/PUT/PATCH)에만 body 유형을 보낸다.
     private enum BodyCase {

@@ -10,6 +10,7 @@ import com.inu.jeongbobada.global.config.OpenApiConfig;
 import com.inu.jeongbobada.global.exception.BusinessException;
 import com.inu.jeongbobada.global.exception.code.GlobalErrorCode;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,21 +27,15 @@ public class CourseReviewController {
 
     //과목 후기 등록
 
-    // SecurityConfig에는 없고 컨트롤러에서 null 체크로 401 — Swagger에는 로그인 필요로 표시
+    // SecurityConfig에서 POST만 authenticated() — Swagger에도 로그인 필요로 표시
     @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME_NAME)
     @PostMapping("/{courseId}/reviews")
     // ApiResponse로 감싼 응답을 반환
     public ResponseEntity<ApiResponse<String>> createReview(
         @PathVariable Long courseId, //URL COURSEID 가져옴
-        @RequestBody ReviewCreateReqDto request, //JSON을 req dto로 받음
+        @Valid @RequestBody ReviewCreateReqDto request, //JSON을 req dto로 받음 (필수값 누락은 400)
         @AuthenticationPrincipal CustomUserDetails user
     ) {
-
-        if (user == null) {
-            throw new BusinessException(GlobalErrorCode.AUTHENTICATION_REQUIRED);
-        }// 사용자 x -> 예외처리
-
-
         String message = courseReviewService.createReview(user.getUserId(), courseId, request);
 
         // 메서드 반환 타입에 맞춰 등록 결과를 공통 응답으로 감쌈
