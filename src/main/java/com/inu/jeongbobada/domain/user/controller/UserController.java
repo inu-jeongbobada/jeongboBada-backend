@@ -2,6 +2,7 @@ package com.inu.jeongbobada.domain.user.controller;
 
 import com.inu.jeongbobada.domain.user.dto.EmailChangeSendCodeRequest;
 import com.inu.jeongbobada.domain.user.dto.EmailUpdateRequest;
+import com.inu.jeongbobada.domain.user.dto.MyInfoResponse;
 import com.inu.jeongbobada.domain.user.dto.NicknameUpdateRequest;
 import com.inu.jeongbobada.domain.user.dto.PasswordUpdateRequest;
 import com.inu.jeongbobada.domain.user.security.CustomUserDetails;
@@ -14,6 +15,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,6 +31,14 @@ public class UserController {
 
     private final UserService userService;
     private final EmailChangeService emailChangeService;
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<MyInfoResponse>> getMyInfo(
+        @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        ApiResponse<MyInfoResponse> response = ApiResponse.ok(userService.getMyInfo(userDetails.getUserId()));
+        return ResponseEntity.status(response.httpStatus()).body(response);
+    }
 
     @PatchMapping("/nickname")
     public ResponseEntity<ApiResponse<Void>> updateNickname(
