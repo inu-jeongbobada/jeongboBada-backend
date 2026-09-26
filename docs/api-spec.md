@@ -16,12 +16,14 @@
 | POST | /api/auth/password-reset/send-code | 비밀번호 찾기 ① 인증코드 발송 | { <br/> "studentId": "202012345", <br/> "email": "가입 때 등록한 이메일" <br/>} | 200 <br/> { "success": true, "data": null } | 구현완료 |
 | POST | /api/auth/password-reset/verify-code | 비밀번호 찾기 ② 인증코드 확인 (코드는 소모되지 않음) | { <br/> "studentId": "202012345", <br/> "code": "숫자 6자리" <br/>} | 200 <br/> { "success": true, "data": null } | 구현완료 |
 | POST | /api/auth/password-reset | 비밀번호 찾기 ③ 비밀번호 재설정 (코드 1회 소모) | { <br/> "studentId": "202012345", <br/> "code": "숫자 6자리", <br/> "newPassword": "영문+숫자 8~64자" <br/>} | 200 <br/> { "success": true, "data": null } | 구현완료 |
+| GET | /api/users/me | 내 정보 조회 (로그인 필요) | Header: <br/> `Authorization: Bearer {accessToken}` | 200 <br/> { "success": true, "data": { <br/> "nickname": "바다", <br/> "studentId": "202012345", <br/> "email": "user@example.com", <br/> "department": null <br/>} } | 구현완료 |
 | POST | /api/users/me/email/send-code | 이메일 등록/변경 ① 새 이메일로 인증코드 발송 (로그인 필요) | Header: <br/> `Authorization: Bearer {accessToken}` <br/> { <br/> "newEmail": "new@example.com" <br/>} | 200 <br/> { "success": true, "data": null } | 구현완료 |
 | PATCH | /api/users/me/email | 이메일 등록/변경 ② 코드+현재 비밀번호 확인 후 변경 (로그인 필요) | Header: <br/> `Authorization: Bearer {accessToken}` <br/> { <br/> "newEmail": "new@example.com", <br/> "code": "숫자 6자리", <br/> "currentPassword": "..." <br/>} | 200 <br/> { "success": true, "data": null } | 구현완료 |
 
 - 닉네임 중복확인은 **닉네임만 제공**한다. 학번/이메일 중복확인은 제공하지 않음 (이 학번/이메일로 가입돼 있다는 걸 누구나 조회할 수 있게 되는 user enumeration 방지) — 가입 시도 시 409로만 안내. 확인 시점과 실제 가입 시점 사이에 다른 사람이 선점할 수 있어 최종 검증은 `signup`에서 다시 함
 - 회원가입에 `email`이 **필수**로 추가됨 (비밀번호 찾기용). 이미 가입된 이메일이면 409. 대소문자/앞뒤 공백은 무시하고 비교
 - 비밀번호 찾기: `send-code`는 **학번이 없거나 이메일이 달라도, 메일 발송이 실패해도 항상 같은 200** (가입 여부 노출 방지). 인증코드는 6자리, 5분 유효, 재발송은 60초 뒤부터
+- 내 정보 조회(`GET /api/users/me`)는 **본인 전용**이라 `studentId`·`email`을 내려준다. `email`은 이메일 기능 이전 가입자면 null, `department`는 가입 때 받지 않아 **현재 항상 null**. 이름·학년·부전공·프로필 사진은 마이페이지 디자인 확정 후 추가 예정(필드 추가만 하므로 기존 클라이언트는 영향 없음)
 - 비밀번호 찾기: 서버는 `verify-code` 통과를 기억하지 않는다 — 화면에서 다음 단계로 넘어가는 용도이고, 재설정 요청(`/api/auth/password-reset`)에도 **같은 `code`를 다시 보내야** 한다
 - 인증코드가 없음/만료/불일치/없는 학번인 경우 모두 400 `INVALID_VERIFICATION_CODE`로 동일하게 응답. 5번 틀리면 코드가 폐기되어 다시 발송받아야 함. 재설정 성공 시 기존 로그인(refresh token)은 모두 무효화
 - 이메일 등록/변경: 코드는 **새 이메일**로 발송. 현재 이메일과 같으면 400, 이미 쓰는 이메일이면 409, 60초 안에 재요청하면 429, 발송 실패는 503. 변경 시 코드를 받은 이메일과 같은 `newEmail`이어야 하고, 현재 비밀번호가 틀리면 400(`CURRENT_PASSWORD_MISMATCH`). 이메일이 없는 기존 계정도 같은 API로 처음 등록

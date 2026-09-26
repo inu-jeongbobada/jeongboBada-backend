@@ -1,5 +1,6 @@
 package com.inu.jeongbobada.domain.user.service;
 
+import com.inu.jeongbobada.domain.user.dto.MyInfoResponse;
 import com.inu.jeongbobada.domain.user.entity.User;
 import com.inu.jeongbobada.domain.user.exception.UserErrorCode;
 import com.inu.jeongbobada.domain.user.repository.UserRepository;
@@ -15,6 +16,11 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+
+    @Transactional(readOnly = true)
+    public MyInfoResponse getMyInfo(Long userId) {
+        return MyInfoResponse.from(getUser(userId));
+    }
 
     // 본인 닉네임과 동일한 값으로의 "변경"은 중복 검사에서 걸리지 않게 자기 자신은 제외하고 확인
     @Transactional

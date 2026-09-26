@@ -32,6 +32,7 @@ Spring Security 필터 체인 구조상 거의 정형화된 패턴을 따른다.
 | `POST /api/auth/login` | X | 학번+비밀번호를 `AuthenticationManager`에 위임해 검증. **학번이 없는 경우와 비밀번호가 틀린 경우를 구분하지 않고 둘 다 동일하게 401(`INVALID_CREDENTIALS`)** — user enumeration(가입 여부 유추) 방지 목적, `GlobalExceptionHandler.handleBadCredentialsException` 참고 |
 | `POST /api/auth/reissue` | X (refresh token 자체가 인증 수단) | refresh token 서명·만료 검증 + **DB에 저장된 값과 문자열 일치**해야 통과 (탈취된 구 토큰 재사용 방지). 통과 시 access/refresh 둘 다 새로 발급(회전) |
 | `POST /api/auth/logout` | X (body의 refresh token 또는 헤더의 access token으로 사용자 특정) | DB에 저장된 refresh token을 삭제만 함 — access token 자체를 서버가 강제로 만료시키는 건 아니라서, 이미 발급된 access token은 만료 시각까지는 계속 유효. **body `refreshToken` 권장**: access가 만료돼도 로그아웃된다. 헤더만 보내는 예전 방식은 access가 만료되면 아무것도 못 지운다(#129). DB 저장값과 같은 refresh일 때만 지운다 — 교체된 예전 refresh로 다른 기기의 현재 로그인을 끊지 않기 위해. 둘 다 없으면 400 |
+| `GET /api/users/me` | O | 본인 정보(`nickname`, `studentId`, `email`, `department`) 조회. 학번·이메일이 들어 있어 **본인 조회 전용 DTO(`MyInfoResponse`)** 로 분리 — 다른 사용자에게 보이는 응답에서 재사용 금지. 경로는 `/api/users/me/**` 규칙에 포함돼 토큰 없으면 401 |
 | `PATCH /api/users/me/nickname` | O | 닉네임 `unique` 제약 때문에 중복 검사하되, **본인 소유 닉네임이면 중복 에러 안 냄**(자기 자신으로의 "변경"은 통과) |
 | `PATCH /api/users/me/password` | O | **현재 비밀번호(`currentPassword`) 확인 필수** — 세션(access token) 탈취 상태에서 공격자가 비밀번호만 바꿔버리는 것 방지. 현재 비밀번호가 틀리면 **400**(`CURRENT_PASSWORD_MISMATCH`) — 401이면 프론트 인터셉터가 토큰 재발급으로 오인함(#115). 성공 시 **기존 refresh token 무효화**(`clearRefreshToken()`) → 다른 기기/세션은 재로그인 필요 |
 | `POST /api/auth/password-reset/send-code` | X | 학번+이메일이 **가입 때 등록한 것과 일치할 때만** 6자리 코드를 메일로 발송. 학번 없음/이메일 불일치/쿨다운 중/**메일 발송 실패**도 전부 동일하게 200 — user enumeration 방지(로그인 API와 같은 원칙), 원인은 서버 로그로만 남김 |
@@ -133,6 +134,10 @@ Figma 화면 기준으로 "로그인 없이 보이는 화면(첫 페이지 등)"
       `UserController`/`UserService` 신설(`PATCH /api/users/me/nickname`, `PATCH /api/users/me/password`).
       `SecurityConfig`에 `/api/users/me/**` `authenticated()` 추가. 비밀번호 변경 성공 시
       `clearRefreshToken()`으로 기존 refresh token 무효화(재로그인 필요)하도록 결정
+
+- [x] 내 정보 조회 API — `GET /api/users/me` ([이슈 #96](https://github.com/inu-jeongbobada/jeongboBada-backend/issues/96)).
+      지금 있는 필드(`nickname`, `studentId`, `email`, `department`)만 제공. 통합 테스트 `MyInfoIntegrationTest`
+- [ ] 마이페이지 프로필 필드(이름·학년·부전공·학과 입력, 프로필 사진) — 디자인·프론트 확정 대기. 사진은 공용 파일 업로드(S3, #98) 이후
 
 ### 7. 비밀번호 찾기 (이메일 인증, 3순위) — [이슈 #87](https://github.com/inu-jeongbobada/jeongboBada-backend/issues/87)
 PASS 본인인증은 소모임 프로젝트 규모에 비해 비용·행정 부담이 커서 채택하지 않고, 이메일 인증코드 방식으로 대체.
