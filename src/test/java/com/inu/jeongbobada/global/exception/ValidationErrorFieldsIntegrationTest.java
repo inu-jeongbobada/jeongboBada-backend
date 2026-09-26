@@ -12,6 +12,7 @@ import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -41,7 +42,10 @@ class ValidationErrorFieldsIntegrationTest {
 
     @Test
     void 잘못된_enum_값은_필드와_허용_값을_알려준다() throws Exception {
+        // 강의평 작성은 로그인 필요 — 인증이 요청 검증보다 먼저라 토큰이 없으면 401로 끝난다.
+        // JSON 변환 단계에서 실패하므로 컨트롤러까지 가지 않아, 임의의 인증 사용자면 충분하다
         mockMvc.perform(post("/api/courses/1/reviews")
+                .with(user("tester"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                     {"rating":"SIX"}

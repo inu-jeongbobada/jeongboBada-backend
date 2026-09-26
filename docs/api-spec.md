@@ -49,6 +49,7 @@
 |---|---|---|---|---|---|
 | GET | /api/courses | 수업 목록 조회 (이번 학기 개설 강의 기준) | N/A | 200 <br/> { "success": true, "data": [{ <br/> "courseId": 0, <br/> "courseName": "...", <br/> "professorName": "...", <br/> "grade": "FIRST\|SECOND\|THIRD\|FOURTH", <br/> "semester": "FIRST\|SECOND", <br/> "credits": "FIRST\|SECOND\|THIRD\|FOURTH", <br/> "courseCode": "...", <br/> "courseType": "MAJOR_CORE\|MAJOR_FOUNDATION\|MAJOR_ADVANCED" <br/>}] } | 구현완료 |
 | GET | /api/courses/{courseId} | 수업 상세 조회 | N/A | 200 <br/> { "success": true, "data": { <br/> "courseId": 0, <br/> "courseCode": "...", <br/> "courseName": "...", <br/> "courseDetail": "...", <br/> "offerings": [{ <br/> "courseOfferingId": 0, <br/> "professor": { "professorId": 0, "professorName": "...", "professorImageUrl": "https://..." }, <br/> "academicYear": 2026, <br/> "semester": "...", <br/> "grade": "...", <br/> "credits": "...", <br/> "courseTime": "...", <br/> "courseType": "...", <br/> "evaluationType": "ABSOLUTE\|RELATIVE", <br/> "isOnline": "BLENDED_LEARNING\|ONLINE\|OFFLINE" <br/>}] <br/>} } | 구현완료 |
+| POST | /api/courses/{courseId}/reviews | 수업 후기 작성 (로그인 필요) | Header: <br/> `Authorization: Bearer {accessToken}` <br/> { <br/> "professorId": 1, <br/> "rating": "ONE~FIVE", <br/> "content": "20~500자", <br/> "textbook", "assignmentDifficulty", "assignmentAmount", "groupActivity", "attendance", "examCount", "quizDifficulty", "examDifficulty", "quizCount", "gradingType" <br/>} <br/> **전부 필수** | 200 <br/> { "success": true, "data": "과목 후기가 등록되었습니다." } <br/> 필수값 누락·길이 오류 400(`errors`에 필드) / 같은 과목+교수에 이미 작성 409 `DUPLICATE_COURSE_REVIEW` | 구현완료 |
 | GET | /api/courses/{id}/reviews | 수업 후기 조회 (학점별 필터) | N/A | N/A | 미구현 |
 
 ## 4. 커뮤니티 (community)
@@ -141,6 +142,7 @@
 | 404 | `PROFESSOR_NOT_FOUND` | 존재하지 않는 교수 |
 | 404 | `COURSE_NOT_FOUND` | 존재하지 않는 과목 |
 | 404 | `COURSE_OFFERING_NOT_FOUND` | 해당 교수가 개설한 과목이 아님 |
+| 409 | `DUPLICATE_COURSE_REVIEW` | 같은 과목+교수에 이미 강의평을 작성함 (동시 요청이 사전 확인을 통과하면 `DUPLICATE_RESOURCE`) |
 | 404 | `PROFESSOR_COMMENT_NOT_FOUND` | 존재하지 않는 교수 후기 |
 | 403 | `PROFESSOR_COMMENT_FORBIDDEN` | 본인이 쓴 교수 후기가 아님 |
 | 404 | `PROFESSOR_COMMENT_PROFESSOR_MISMATCH` | URL의 교수와 후기의 교수가 다름 (작성자 확인이 먼저라 남의 후기면 403이 먼저 나감) |

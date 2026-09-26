@@ -8,6 +8,7 @@ import com.inu.jeongbobada.domain.course.repository.CourseOfferingRepository;
 import com.inu.jeongbobada.domain.course.repository.CourseRepository;
 import com.inu.jeongbobada.domain.courseReview.entity.CourseReview;
 import com.inu.jeongbobada.domain.courseReview.enums.ReviewSort;
+import com.inu.jeongbobada.domain.courseReview.exception.CourseReviewErrorCode;
 import com.inu.jeongbobada.domain.courseReview.repository.CourseReviewRepository;
 import com.inu.jeongbobada.domain.professor.entity.Professor;
 import com.inu.jeongbobada.domain.professor.exception.ProfessorErrorCode;
@@ -46,6 +47,13 @@ public class CourseReviewService {
         // 이 교수가 실제로 이 과목을 개설한 적 있는지 확인 (엉뚱한 과목-교수 조합으로 후기가 달리는 것 방지)
         courseOfferingRepository.findByCourse_CourseIdAndProfessor_ProfessorId(courseId, professor.getProfessorId())
             .orElseThrow(() -> new BusinessException(CourseErrorCode.COURSE_OFFERING_NOT_FOUND));
+
+        // 같은 사람이 같은 강의(과목+교수)에 두 번 쓰는 것 방지. 확인과 저장 사이 동시 요청은
+        // DB UNIQUE에 걸려 전역 핸들러가 409 DUPLICATE_RESOURCE로 응답한다 (#118)
+        if (courseReviewRepository.existsByUser_UserIdAndCourse_CourseIdAndProfessor_ProfessorId(
+            userId, courseId, professor.getProfessorId())) {
+            throw new BusinessException(CourseReviewErrorCode.DUPLICATE_COURSE_REVIEW);
+        }
 
         CourseReview review = new CourseReview(
             user,
