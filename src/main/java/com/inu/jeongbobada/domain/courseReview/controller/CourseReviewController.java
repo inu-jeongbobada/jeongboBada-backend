@@ -1,14 +1,13 @@
 package com.inu.jeongbobada.domain.courseReview.controller;
 
 import com.inu.jeongbobada.domain.courseReview.dto.request.ReviewCreateReqDto;
+import com.inu.jeongbobada.domain.courseReview.dto.request.ReviewUpdateReqDto;
 import com.inu.jeongbobada.domain.courseReview.dto.response.ReviewResDto;
 import com.inu.jeongbobada.domain.courseReview.enums.ReviewSort;
 import com.inu.jeongbobada.domain.courseReview.service.CourseReviewService;
 import com.inu.jeongbobada.domain.user.security.CustomUserDetails;
 import com.inu.jeongbobada.global.common.ApiResponse;
 import com.inu.jeongbobada.global.config.OpenApiConfig;
-import com.inu.jeongbobada.global.exception.BusinessException;
-import com.inu.jeongbobada.global.exception.code.GlobalErrorCode;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -64,5 +63,37 @@ public class CourseReviewController {
         List<ReviewResDto> response = courseReviewService.getReviews(courseId, sort);
 
         return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    // 본인이 작성한 과목 후기 삭제
+    @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME_NAME)
+    @DeleteMapping("/{courseId}/reviews/{reviewId}")
+    public ResponseEntity<ApiResponse<String>> deleteReview(
+        @PathVariable Long courseId,
+        @PathVariable Long reviewId,
+        @AuthenticationPrincipal CustomUserDetails user
+    ) {
+        String message = courseReviewService.deleteReview(user.getUserId(), courseId, reviewId);
+
+        return ResponseEntity.ok(ApiResponse.ok(message));
+    }
+
+    // 본인이 작성한 과목 후기 수정
+    @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME_NAME)
+    @PutMapping("/{courseId}/reviews/{reviewId}")
+    public ResponseEntity<ApiResponse<String>> updateReview(
+        @PathVariable Long courseId,
+        @PathVariable Long reviewId,
+        @Valid @RequestBody ReviewUpdateReqDto request,
+        @AuthenticationPrincipal CustomUserDetails user
+    ) {
+        String message = courseReviewService.updateReview(
+            user.getUserId(),
+            courseId,
+            reviewId,
+            request
+        );
+
+        return ResponseEntity.ok(ApiResponse.ok(message));
     }
 }
