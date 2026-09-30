@@ -62,6 +62,8 @@ public class SecurityConfig {
                         // 강의평 작성만 로그인 필요 (조회는 비로그인 허용). 컨트롤러가 아니라 여기서 막아야
                         // 요청 검증(@Valid)보다 인증이 먼저 걸려, 토큰 없는 잘못된 요청도 400이 아니라 401이 된다
                         .requestMatchers(HttpMethod.POST, "/api/courses/*/reviews").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/courses/*/reviews/*").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/courses/*/reviews/*").authenticated()
                         // TODO: 그 외 인증이 필요한 경로(마이페이지 즐겨찾기 등)가 생기면
                         // 그 경로를 여기 authenticated()로 먼저 추가한 뒤 아래 anyRequest()보다 앞에 둘 것.
                         .anyRequest().permitAll()

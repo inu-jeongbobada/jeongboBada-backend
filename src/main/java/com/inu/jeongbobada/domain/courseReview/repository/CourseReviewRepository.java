@@ -5,9 +5,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.util.List;
+import java.util.Optional;
 
 
 public interface CourseReviewRepository extends JpaRepository<CourseReview, Long> {
+    // URL의 과목과 삭제 대상 후기가 실제로 연결돼 있는지 함께 확인한다.
+    Optional<CourseReview> findByReviewIdAndCourse_CourseId(Long reviewId, Long courseId);
+
     // 중복 작성 사전 확인 — UNIQUE (USER_ID, COURSE_ID, PROFESSOR_ID)와 같은 조합
     boolean existsByUser_UserIdAndCourse_CourseIdAndProfessor_ProfessorId(Long userId, Long courseId, Long professorId);
 

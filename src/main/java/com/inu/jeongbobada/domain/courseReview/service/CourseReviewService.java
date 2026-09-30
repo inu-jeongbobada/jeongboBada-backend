@@ -1,6 +1,7 @@
 package com.inu.jeongbobada.domain.courseReview.service;
 
 import com.inu.jeongbobada.domain.courseReview.dto.request.ReviewCreateReqDto;
+import com.inu.jeongbobada.domain.courseReview.dto.request.ReviewUpdateReqDto;
 import com.inu.jeongbobada.domain.courseReview.dto.response.ReviewResDto;
 import com.inu.jeongbobada.domain.course.entity.Course;
 import com.inu.jeongbobada.domain.course.exception.CourseErrorCode;
@@ -17,6 +18,7 @@ import com.inu.jeongbobada.domain.user.entity.User;
 import com.inu.jeongbobada.domain.user.exception.UserErrorCode;
 import com.inu.jeongbobada.domain.user.repository.UserRepository;
 import com.inu.jeongbobada.global.exception.BusinessException;
+import com.inu.jeongbobada.global.exception.code.GlobalErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -78,6 +80,48 @@ public class CourseReviewService {
         return "과목 후기가 등록되었습니다.";
     }
 
+    @Transactional
+    public String deleteReview(Long userId, Long courseId, Long reviewId) {
+        CourseReview review = courseReviewRepository
+            .findByReviewIdAndCourse_CourseId(reviewId, courseId)
+            .orElseThrow(() -> new BusinessException(CourseReviewErrorCode.COURSE_REVIEW_NOT_FOUND));
+
+        if (!review.getUser().getUserId().equals(userId)) {
+            throw new BusinessException(GlobalErrorCode.FORBIDDEN);
+        }
+
+        courseReviewRepository.delete(review);
+        return "과목 후기가 삭제되었습니다.";
+    }
+
+    @Transactional
+    public String updateReview(Long userId, Long courseId, Long reviewId, ReviewUpdateReqDto request) {
+        CourseReview review = courseReviewRepository
+            .findByReviewIdAndCourse_CourseId(reviewId, courseId)
+            .orElseThrow(() -> new BusinessException(CourseReviewErrorCode.COURSE_REVIEW_NOT_FOUND));
+
+        if (!review.getUser().getUserId().equals(userId)) {
+            throw new BusinessException(GlobalErrorCode.FORBIDDEN);
+        }
+
+        review.update(
+            request.rating(),
+            request.content(),
+            request.textbook(),
+            request.assignmentDifficulty(),
+            request.assignmentAmount(),
+            request.groupActivity(),
+            request.attendance(),
+            request.examCount(),
+            request.quizDifficulty(),
+            request.examDifficulty(),
+            request.quizCount(),
+            request.gradingType()
+        );
+
+        return "과목 후기가 수정되었습니다.";
+    }
+
     @Transactional(readOnly = true)
     public List<ReviewResDto> getReviews(Long courseId, ReviewSort sort) {
         // 없는 과목은 404 예외처리  존재하지만 후기가 없는 과목은 빈 목록을 반환
@@ -105,4 +149,7 @@ public class CourseReviewService {
             ))
             .toList();
     }
+
+
+
 }

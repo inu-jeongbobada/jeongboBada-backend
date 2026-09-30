@@ -8,7 +8,9 @@ import org.springframework.http.HttpStatus;
 public enum CourseReviewErrorCode implements BaseErrorCode {
 
     // 후기 단위는 (사용자, 과목, 교수) — UK_USER_COURSE_PROFESSOR_REVIEW
-    DUPLICATE_COURSE_REVIEW(HttpStatus.CONFLICT, "DUPLICATE_COURSE_REVIEW", "이미 이 강의에 후기를 작성했습니다.");
+    DUPLICATE_COURSE_REVIEW(HttpStatus.CONFLICT, "DUPLICATE_COURSE_REVIEW", "이미 이 강의에 후기를 작성했습니다."),
+
+    COURSE_REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "COURSE_REVIEW_NOT_FOUND", "강의평을 찾을 수 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

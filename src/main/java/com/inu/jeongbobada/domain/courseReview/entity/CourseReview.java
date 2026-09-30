@@ -152,4 +152,32 @@ public class CourseReview extends BaseEntity {
         this.quizCount = quizCount;
         this.gradingType = gradingType;
     }
+
+    public void update(
+        Rating rating,
+        String content,
+        TextBook textbook,
+        Difficulty assignmentDifficulty,
+        Amount assignmentAmount,
+        GroupActivity groupActivity,
+        Attendance attendance,
+        Count examCount,
+        Difficulty quizDifficulty,
+        Difficulty examDifficulty,
+        Count quizCount,
+        GradingType gradingType
+    ) {
+        this.rating = rating;
+        this.content = content;
+        this.textbook = textbook;
+        this.assignmentDifficulty = assignmentDifficulty;
+        this.assignmentAmount = assignmentAmount;
+        this.groupActivity = groupActivity;
+        this.attendance = attendance;
+        this.examCount = examCount;
+        this.quizDifficulty = quizDifficulty;
+        this.examDifficulty = examDifficulty;
+        this.quizCount = quizCount;
+        this.gradingType = gradingType;
+    }
 }

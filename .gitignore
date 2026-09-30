@@ -45,6 +45,9 @@ out/
 ### Logs ###
 *.log
 
+### Generated temporary files ###
+tmp/
+
 ### Local config (DB 비밀번호 등 포함, application.yml.example 참고) ###
 application.yml
 application-*.yml
