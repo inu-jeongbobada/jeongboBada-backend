@@ -57,8 +57,8 @@ class ConcurrentSignupIntegrationTest {
         for (int i = 0; i < REQUESTS; i++) {
             // 학번만 같고 닉네임·이메일은 달라서, 겹치는 건 학번 UNIQUE 하나뿐이다
             String body = """
-                {"studentId":"%s","password":"password1","nickname":"cs%d_%d","email":"cs%d_%d@example.com"}
-                """.formatted(studentId, n % 10_000, i, n, i);
+                {"studentId":"%s","password":"password1","nickname":"c%03d%02d","email":"cs%d_%d@example.com"}
+                """.formatted(studentId, n % 1_000, i, n, i);
             HttpRequest request = HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/api/auth/signup"))
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(body))

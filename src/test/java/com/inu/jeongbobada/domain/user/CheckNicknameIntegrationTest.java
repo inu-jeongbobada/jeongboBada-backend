@@ -64,7 +64,7 @@ class CheckNicknameIntegrationTest {
 
     @Test
     void 이미_가입된_닉네임은_사용_불가능하다() throws Exception {
-        String nickname = signupWithNickname("t" + ThreadLocalRandom.current().nextInt(1_000_000));
+        String nickname = signupWithNickname("t" + ThreadLocalRandom.current().nextInt(100_000));
 
         mockMvc.perform(get("/api/auth/check-nickname").param("nickname", nickname))
             .andExpect(status().isOk())

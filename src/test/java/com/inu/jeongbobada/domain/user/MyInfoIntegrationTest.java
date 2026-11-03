@@ -42,7 +42,7 @@ class MyInfoIntegrationTest {
     void signUp() throws Exception {
         int n = ThreadLocalRandom.current().nextInt(100_000_000);
         studentId = String.format("9%08d", n);
-        nickname = "me" + (n % 1_000_000);
+        nickname = "me" + (n % 10_000);
         email = "me" + n + "@example.com";
         mockMvc.perform(post("/api/auth/signup")
                 .contentType(MediaType.APPLICATION_JSON)

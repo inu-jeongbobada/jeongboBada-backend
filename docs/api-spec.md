@@ -9,7 +9,7 @@
 | Method | Path | 설명 | Request | Response | 상태 |
 |---|---|---|---|---|---|
 | GET | /api/auth/check-nickname?nickname= | 회원가입 폼에서 닉네임 사용 가능 여부 실시간 확인 | Query: <br/> `nickname` | 200 <br/> { "success": true, "data": { "available": true } } | 구현완료 |
-| POST | /api/auth/signup | 회원가입 (학번 기반) | { <br/> "studentId": "202012345", <br/> "password": "영문+숫자 8~64자", <br/> "nickname": "한글/영문/숫자/-/_  2~10자", <br/> "email": "user@example.com" <br/>} | 201 <br/> { "success": true, "data": null } | 구현완료 |
+| POST | /api/auth/signup | 회원가입 (학번 기반) | { <br/> "studentId": "202012345", <br/> "password": "영문+숫자 8~64자", <br/> "nickname": "한글/영문/숫자 2~6자", <br/> "email": "user@example.com" <br/>} | 201 <br/> { "success": true, "data": null } | 구현완료 |
 | POST | /api/auth/login | 로그인 (JWT 발급) | { <br/> "studentId": "202012345", <br/> "password": "..." <br/>} | 200 <br/> { "success": true, "data": { <br/> "accessToken": "eyJ...", <br/> "refreshToken": "eyJ..." <br/>} } | 구현완료 |
 | POST | /api/auth/reissue | Access Token 재발급 | { <br/> "refreshToken": "eyJ..." <br/>} | 200 <br/> { "success": true, "data": { <br/> "accessToken": "eyJ...", <br/> "refreshToken": "eyJ..." <br/>} } | 구현완료 |
 | POST | /api/auth/logout | 로그아웃 (서버의 refresh token 무효화) | { <br/> "refreshToken": "..." <br/>} (권장) <br/> 또는 Header: `Authorization: Bearer {accessToken}` (예전 방식) | 200 <br/> { "success": true, "data": null } <br/> 둘 다 없으면 400 | 구현완료 |
