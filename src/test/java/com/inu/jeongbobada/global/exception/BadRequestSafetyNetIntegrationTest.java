@@ -107,7 +107,7 @@ class BadRequestSafetyNetIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                     {"studentId":"%s","password":"password1","nickname":"sn%d","email":"sn%d@example.com"}
-                    """.formatted(studentId, n % 1_000_000, n)))
+                    """.formatted(studentId, n % 10_000, n)))
             .andExpect(status().isCreated());
         accessToken = jwtTokenProvider.createAccessToken(studentId);
     }

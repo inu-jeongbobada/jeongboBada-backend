@@ -14,6 +14,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -38,6 +39,33 @@ class ValidationErrorFieldsIntegrationTest {
             .andExpect(jsonPath("$.code").value("INVALID_INPUT_VALUE"))
             .andExpect(jsonPath("$.errors[*].field").value(containsInAnyOrder("studentId", "password", "nickname", "email")))
             .andExpect(jsonPath("$.errors[?(@.field == 'studentId')].message").value("학번은 필수입니다."));
+    }
+
+    @Test
+    void 가입_닉네임은_6자_이하_한글_영문_숫자만_허용한다() throws Exception {
+        for (String nickname : new String[] {"일곱글자닉네임", "닉_네임"}) {
+            mockMvc.perform(post("/api/auth/signup")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                        {"studentId":"999999999","password":"password1","nickname":"%s","email":"nick@example.com"}
+                        """.formatted(nickname)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[*].field").value(containsInAnyOrder("nickname")));
+        }
+    }
+
+    @Test
+    void 닉네임_변경도_가입과_같은_규칙을_적용한다() throws Exception {
+        for (String nickname : new String[] {"일곱글자닉네임", "닉_네임"}) {
+            mockMvc.perform(patch("/api/users/me/nickname")
+                    .with(user("tester"))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                        {"nickname":"%s"}
+                        """.formatted(nickname)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[*].field").value(containsInAnyOrder("nickname")));
+        }
     }
 
     @Test

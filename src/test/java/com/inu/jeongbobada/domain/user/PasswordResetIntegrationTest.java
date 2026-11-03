@@ -69,7 +69,7 @@ class PasswordResetIntegrationTest {
     private Account signup() throws Exception {
         int n = ThreadLocalRandom.current().nextInt(100_000_000);
         Account account = new Account(
-            String.format("9%08d", n), "t" + String.format("%08d", n), "it" + n + "@example.com");
+            String.format("9%08d", n), "t" + String.format("%05d", n % 100_000), "it" + n + "@example.com");
         createdStudentIds.add(account.studentId());
 
         mockMvc.perform(post("/api/auth/signup")

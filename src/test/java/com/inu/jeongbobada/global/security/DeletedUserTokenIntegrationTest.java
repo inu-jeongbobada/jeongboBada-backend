@@ -47,7 +47,7 @@ class DeletedUserTokenIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                     {"studentId":"%s","password":"password1","nickname":"d%d","email":"del%d@example.com"}
-                    """.formatted(studentId, n % 1_000_000, n)))
+                    """.formatted(studentId, n % 100_000, n)))
             .andExpect(status().isCreated());
 
         accessToken = jwtTokenProvider.createAccessToken(studentId);
@@ -74,7 +74,7 @@ class DeletedUserTokenIntegrationTest {
                 .header("Authorization", "Bearer " + accessToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
-                    {"nickname":"newnick"}
+                    {"nickname":"newnk"}
                     """))
             .andExpect(status().isUnauthorized())
             .andExpect(jsonPath("$.code").value("AUTHENTICATION_REQUIRED"));

@@ -116,7 +116,7 @@ class CourseReviewCreateIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                     {"studentId":"%s","password":"password1","nickname":"rv%d","email":"rv%d@example.com"}
-                    """.formatted(studentId, n % 1_000_000, n)))
+                    """.formatted(studentId, n % 10_000, n)))
             .andExpect(status().isCreated());
 
         course = courseRepository.save(new Course("테스트과목", "T" + n, "테스트 과목 설명"));
@@ -352,7 +352,7 @@ class CourseReviewCreateIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                     {"studentId":"%s","password":"password1","nickname":"o%d","email":"other%d@example.com"}
-                    """.formatted(additionalStudentId, n % 1_000_000, n)))
+                    """.formatted(additionalStudentId, n % 100_000, n)))
             .andExpect(status().isCreated());
 
         return additionalStudentId;

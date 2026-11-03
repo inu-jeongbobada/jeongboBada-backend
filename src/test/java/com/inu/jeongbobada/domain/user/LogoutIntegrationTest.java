@@ -49,7 +49,7 @@ class LogoutIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                     {"studentId":"%s","password":"password1","nickname":"lg%d","email":"lg%d@example.com"}
-                    """.formatted(studentId, n % 1_000_000, n)))
+                    """.formatted(studentId, n % 10_000, n)))
             .andExpect(status().isCreated());
     }
 
