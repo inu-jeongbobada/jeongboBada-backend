@@ -36,8 +36,8 @@ Spring Security 필터 체인 구조상 거의 정형화된 패턴을 따른다.
 | `PATCH /api/users/me/nickname` | O | 닉네임 `unique` 제약 때문에 중복 검사하되, **본인 소유 닉네임이면 중복 에러 안 냄**(자기 자신으로의 "변경"은 통과). 형식은 가입과 같은 2~6자, 한글·영문·숫자. 이 규칙 전에 만든 긴 닉네임은 그대로 유지되고, 바꿀 때만 새 규칙을 적용한다 |
 | `PATCH /api/users/me/password` | O | **현재 비밀번호(`currentPassword`) 확인 필수** — 세션(access token) 탈취 상태에서 공격자가 비밀번호만 바꿔버리는 것 방지. 현재 비밀번호가 틀리면 **400**(`CURRENT_PASSWORD_MISMATCH`) — 401이면 프론트 인터셉터가 토큰 재발급으로 오인함(#115). 성공 시 **기존 refresh token 무효화**(`clearRefreshToken()`) → 다른 기기/세션은 재로그인 필요 |
 | `POST /api/auth/password-reset/send-code` | X | 학번+이메일이 **가입 때 등록한 것과 일치할 때만** 6자리 코드를 메일로 발송. **와이어프레임 확정으로 불일치를 구분한다**(404 `PASSWORD_RESET_ACCOUNT_NOT_FOUND`, 2026-11-03 결정). 60초 쿨다운은 429 `VERIFICATION_CODE_RESEND_TOO_FAST`, 재발송은 첫 발송을 빼고 하루 5회(한국 시간 기준, 초과 시 429 `PASSWORD_RESET_RESEND_LIMIT_EXCEEDED`)이고 응답의 `resendCount`로 n/5회를 표시한다. 발송 실패는 503 `EMAIL_SEND_FAILED`로 롤백되어 코드와 횟수가 남지 않는다. 횟수를 정확히 세려고 행 잠금(`findByStudentIdForUpdate`)을 쓴다 |
-| `POST /api/auth/password-reset/verify-code` | X | 코드가 맞는지만 확인하고 **코드는 소모하지 않음**(화면 단계 이동 판단용). 없음/만료/불일치/없는 학번 모두 동일하게 400(`INVALID_VERIFICATION_CODE`) |
-| `POST /api/auth/password-reset` | X | 학번+코드+새 비밀번호. **서버는 verify-code 통과를 기억하지 않으므로 코드를 다시 검증**하고, 성공하면 코드를 폐기(1회용). 성공 시 `clearRefreshToken()`으로 기존 로그인 무효화 |
+| `POST /api/auth/password-reset/verify-code` | X | 코드가 맞는지만 확인하고 **코드는 소모하지 않음**(화면 단계 이동 판단용). **와이어프레임 화면에 맞춰 실패 사유를 구분한다**: 불일치 `PASSWORD_RESET_CODE_MISMATCH`(n/5회), 5번째 불일치 `PASSWORD_RESET_CODE_ATTEMPTS_EXCEEDED`, 만료 `PASSWORD_RESET_CODE_EXPIRED`, 없음/없는 학번 `INVALID_VERIFICATION_CODE` (모두 400). 횟수를 정확히 세려고 행 잠금(`findByStudentIdForUpdate`)을 쓴다 |
+| `POST /api/auth/password-reset` | X | 학번+코드+새 비밀번호. **서버는 verify-code 통과를 기억하지 않으므로 코드를 다시 검증**하고, 성공하면 코드를 폐기(1회용). 성공 시 `clearRefreshToken()`으로 기존 로그인 무효화, `clearLoginFailures()`로 로그인 잠금 해제. 지금 비밀번호와 같으면 400 `PASSWORD_RESET_SAME_PASSWORD`이고 코드는 소모하지 않음 |
 | `POST /api/users/me/email/send-code` | O | **새 이메일**로 인증코드 발송. 현재 이메일과 동일 400 / 이미 사용 중 409 / 쿨다운 중 429 / 발송 실패 503 (로그인한 본인 대상이라 사유를 그대로 알려줌) |
 | `PATCH /api/users/me/email` | O | `newEmail`+`code`+`currentPassword`. **현재 비밀번호 확인 필수**, 코드를 받은 이메일과 다른 주소로는 변경 불가. 이메일이 없는 기존 가입자도 같은 API로 처음 등록 |
 | 관리자 전용 API (아직 없음) | O + `ROLE_ADMIN` | `@PreAuthorize("hasRole('ADMIN')")` 사용. 권한 부족이면 403(`JwtAccessDeniedHandler`), 미인증이면 401(`JwtAuthenticationEntryPoint`) — 이 둘은 이미 배선 완료 |
@@ -182,7 +182,7 @@ PASS 본인인증은 소모임 프로젝트 규모에 비해 비용·행정 부�
   틀린 횟수는 `verify-code`와 재설정 API가 합쳐서 셈
 - **틀린 횟수는 예외가 나도 DB에 커밋돼야 함** → 검증 메서드에 `@Transactional(noRollbackFor = BusinessException.class)`.
   이걸 빼면 예외로 롤백돼서 횟수가 쌓이지 않고 무제한 시도가 가능해짐 (통합 테스트가 이 회귀를 잡는 것을 확인함)
-- 없음/만료/불일치/없는 학번은 모두 `INVALID_VERIFICATION_CODE` 하나로 응답 — 추측 공격에 힌트를 주지 않기 위함
+- 이메일 변경은 없음/만료/불일치를 `INVALID_VERIFICATION_CODE` 하나로 응답 — 추측 공격에 힌트를 주지 않기 위함. 비밀번호 찾기는 와이어프레임 화면이 사유마다 달라서 구분한다(2026-11-03). 시도 횟수 제한은 그대로라 코드를 맞힐 확률은 달라지지 않는다
 - 비밀번호 찾기 재설정 성공 시 `clearRefreshToken()` (비밀번호 변경 API와 동일하게 다른 기기는 재로그인)
 
 **남은 갭 / 후속**

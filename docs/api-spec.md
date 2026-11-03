@@ -25,7 +25,8 @@
 - 비밀번호 찾기: `send-code`는 학번이 없거나 이메일이 다르면 404 `PASSWORD_RESET_ACCOUNT_NOT_FOUND`, 60초 안에 재요청하면 429 `VERIFICATION_CODE_RESEND_TOO_FAST`, 재발송을 다 쓰면 429 `PASSWORD_RESET_RESEND_LIMIT_EXCEEDED`, 발송 실패는 503 `EMAIL_SEND_FAILED`. 인증코드는 6자리, 5분 유효. 재발송은 첫 발송을 빼고 하루 5회(한국 시간 자정에 초기화)이고, `resendCount`는 첫 발송이면 0, 재발송이면 n/5회의 n이다
 - 내 정보 조회(`GET /api/users/me`)는 **본인 전용**이라 `studentId`·`email`을 내려준다. `email`은 이메일 기능 이전 가입자면 null, `department`는 가입 때 받지 않아 **현재 항상 null**. 이름·학년·부전공·프로필 사진은 마이페이지 디자인 확정 후 추가 예정(필드 추가만 하므로 기존 클라이언트는 영향 없음)
 - 비밀번호 찾기: 서버는 `verify-code` 통과를 기억하지 않는다 — 화면에서 다음 단계로 넘어가는 용도이고, 재설정 요청(`/api/auth/password-reset`)에도 **같은 `code`를 다시 보내야** 한다
-- 인증코드가 없음/만료/불일치/없는 학번인 경우 모두 400 `INVALID_VERIFICATION_CODE`로 동일하게 응답. 5번 틀리면 코드가 폐기되어 다시 발송받아야 함. 재설정 성공 시 기존 로그인(refresh token)은 모두 무효화
+- 비밀번호 찾기 코드 확인·재설정의 실패는 모두 400이고 `code`로 구분한다: 불일치 `PASSWORD_RESET_CODE_MISMATCH`(`message`에 n/5회), 5번째 불일치 `PASSWORD_RESET_CODE_ATTEMPTS_EXCEEDED`(코드 폐기, 다시 발송받아야 함), 만료 `PASSWORD_RESET_CODE_EXPIRED`, 코드 없음·없는 학번 `INVALID_VERIFICATION_CODE`. 틀린 횟수는 `verify-code`와 재설정 API가 합쳐서 센다
+- 비밀번호 재설정: 지금 비밀번호와 같으면 400 `PASSWORD_RESET_SAME_PASSWORD`이고 코드는 소모되지 않아 다른 비밀번호로 다시 보낼 수 있다. 재설정 성공 시 기존 로그인(refresh token)은 모두 무효화하고, 로그인 잠금과 실패 횟수도 지운다
 - 이메일 등록/변경: 코드는 **새 이메일**로 발송. 현재 이메일과 같으면 400, 이미 쓰는 이메일이면 409, 60초 안에 재요청하면 429, 발송 실패는 503. 변경 시 코드를 받은 이메일과 같은 `newEmail`이어야 하고, 현재 비밀번호가 틀리면 400(`CURRENT_PASSWORD_MISMATCH`). 이메일이 없는 기존 계정도 같은 API로 처음 등록
 - 로그인/재발급 응답의 `refreshToken`은 studentId처럼 민감정보 취급 — 화면에 노출하지 말고 저장 용도로만 사용
 - 아직 인증 필터가 없어서(작업 중), 로그인 없이도 모든 API가 열려있는 상태. 추후 로그인 필요한 API가 생기면 이 문서에 표시 예정
@@ -132,7 +133,11 @@
 | 409 | `DUPLICATE_RESOURCE` | 동시 요청으로 DB UNIQUE 제약에 걸림 (가입 더블클릭 등). 사전 확인에 걸리면 도메인 코드(`DUPLICATE_NICKNAME` 등)가 나가고, 확인과 저장 사이에 다른 요청이 끼어든 경우에만 이 코드 |
 | 415 | `UNSUPPORTED_MEDIA_TYPE` | JSON을 받는 API에 `Content-Type`이 없거나 JSON이 아님 |
 | 500 | `INTERNAL_SERVER_ERROR` | 서버 내부 오류 |
-| 400 | `INVALID_VERIFICATION_CODE` | 인증코드 없음/만료/불일치 (사유는 구분하지 않음) |
+| 400 | `INVALID_VERIFICATION_CODE` | 이메일 변경 인증코드 없음/만료/불일치(사유는 구분하지 않음), 비밀번호 찾기 코드 없음/없는 학번 |
+| 400 | `PASSWORD_RESET_CODE_MISMATCH` | 비밀번호 찾기 인증번호 불일치. `message`에 n/5회 포함 |
+| 400 | `PASSWORD_RESET_CODE_ATTEMPTS_EXCEEDED` | 비밀번호 찾기 인증번호 5회 불일치로 인증 중단 |
+| 400 | `PASSWORD_RESET_CODE_EXPIRED` | 비밀번호 찾기 인증번호 만료 |
+| 400 | `PASSWORD_RESET_SAME_PASSWORD` | 재설정할 비밀번호가 지금 비밀번호와 같음 |
 | 400 | `SAME_EMAIL` | 현재 이메일과 같은 이메일로 변경 요청 |
 | 400 | `CURRENT_PASSWORD_MISMATCH` | 비밀번호·이메일 변경 시 현재 비밀번호 불일치 (401 아님 — 재발급 대상 아님) |
 | 401 | `INVALID_CREDENTIALS` | 로그인 비밀번호 틀림. `message`에 실패 횟수 포함 (예: `(2/5회)`) |
