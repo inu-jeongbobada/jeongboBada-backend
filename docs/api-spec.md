@@ -143,7 +143,7 @@
 | 409 | `DUPLICATE_NICKNAME` | 이미 사용 중인 닉네임 |
 | 409 | `DUPLICATE_EMAIL` | 이미 사용 중인 이메일 |
 | 429 | `VERIFICATION_CODE_RESEND_TOO_FAST` | 인증코드 재발송 60초 제한 |
-| 429 | `LOGIN_LOCKED` | 로그인 5회 실패로 10분 잠금. 남은 시간(초)은 `Retry-After` 헤더 |
+| 429 | `LOGIN_LOCKED` | 로그인 5회 실패로 5분 잠금. 남은 시간(초)은 `Retry-After` 헤더 |
 | 503 | `EMAIL_SEND_FAILED` | 메일 발송 실패 |
 | 404 | `PROFESSOR_NOT_FOUND` | 존재하지 않는 교수 |
 | 404 | `COURSE_NOT_FOUND` | 존재하지 않는 과목 |

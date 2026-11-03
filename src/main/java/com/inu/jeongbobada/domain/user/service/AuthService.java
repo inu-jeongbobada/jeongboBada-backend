@@ -29,7 +29,7 @@ import java.time.LocalDateTime;
 public class AuthService {
 
     private static final int MAX_LOGIN_FAILURES = 5;
-    private static final Duration LOGIN_LOCK_DURATION = Duration.ofMinutes(10);
+    private static final Duration LOGIN_LOCK_DURATION = Duration.ofMinutes(5);
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;

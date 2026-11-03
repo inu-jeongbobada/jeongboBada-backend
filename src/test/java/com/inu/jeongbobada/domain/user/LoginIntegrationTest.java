@@ -124,7 +124,7 @@ class LoginIntegrationTest {
             .andExpect(status().isTooManyRequests())
             .andExpect(jsonPath("$.code").value("LOGIN_LOCKED"));
         long retryAfter = Long.parseLong(fifth.andReturn().getResponse().getHeader("Retry-After"));
-        assertThat(retryAfter).isBetween(1L, 600L);
+        assertThat(retryAfter).isBetween(1L, 300L);
 
         login(studentId, PASSWORD)
             .andExpect(status().isTooManyRequests())
