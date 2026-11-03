@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.ColumnDefault;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -93,6 +94,24 @@ public class User extends BaseEntity {
 
     @Column(name = "LOGIN_LOCKED_UNTIL")
     private LocalDateTime loginLockedUntil;
+
+    // 기본값은 이 컬럼이 생기기 전에 만들어진 행과 INSERT 문에 컬럼이 없는 경우를 위한 것
+    @ColumnDefault("0")
+    @Column(name = "PASSWORD_RESET_SEND_COUNT", nullable = false)
+    private int passwordResetSendCount;
+
+    @Column(name = "PASSWORD_RESET_SEND_DATE")
+    private LocalDate passwordResetSendDate;
+
+    // 저장된 횟수가 다른 날짜의 것이면 오늘은 아직 보낸 적이 없다
+    public int passwordResetSendCountOn(LocalDate date) {
+        return date.equals(passwordResetSendDate) ? passwordResetSendCount : 0;
+    }
+
+    public void recordPasswordResetSend(LocalDate date, int sendCount) {
+        this.passwordResetSendDate = date;
+        this.passwordResetSendCount = sendCount;
+    }
 
     public int recordLoginFailure() {
         return ++loginFailedAttempts;

@@ -12,13 +12,14 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -48,6 +49,12 @@ class PasswordResetServiceTest {
     void setUp() {
         user = User.create(STUDENT_ID, passwordEncoder.encode("oldPassword1"), "테스터", null, EMAIL);
         when(userRepository.findByStudentId(STUDENT_ID)).thenReturn(Optional.of(user));
+        when(userRepository.findByStudentIdForUpdate(STUDENT_ID)).thenReturn(Optional.of(user));
+    }
+
+    private void assertSendCodeFails(String studentId, String email, UserErrorCode expected) {
+        assertThatThrownBy(() -> service.sendCode(studentId, email))
+            .isInstanceOfSatisfying(BusinessException.class, e -> assertThat(e.getErrorCode()).isEqualTo(expected));
     }
 
     // 발송된 메일 본문에서 6자리 코드를 꺼낸다
@@ -81,17 +88,17 @@ class PasswordResetServiceTest {
     }
 
     @Test
-    void 없는_학번이면_메일을_보내지_않고_예외도_내지_않는다() {
-        when(userRepository.findByStudentId("999999999")).thenReturn(Optional.empty());
+    void 없는_학번이면_메일을_보내지_않고_404로_구분한다() {
+        when(userRepository.findByStudentIdForUpdate("999999999")).thenReturn(Optional.empty());
 
-        assertThatCode(() -> service.sendCode("999999999", EMAIL)).doesNotThrowAnyException();
+        assertSendCodeFails("999999999", EMAIL, UserErrorCode.PASSWORD_RESET_ACCOUNT_NOT_FOUND);
 
         verify(emailSender, never()).send(anyString(), anyString(), anyString());
     }
 
     @Test
-    void 가입한_이메일과_다르면_메일을_보내지_않고_예외도_내지_않는다() {
-        assertThatCode(() -> service.sendCode(STUDENT_ID, "other@gmail.com")).doesNotThrowAnyException();
+    void 가입한_이메일과_다르면_메일을_보내지_않고_404로_구분한다() {
+        assertSendCodeFails(STUDENT_ID, "other@gmail.com", UserErrorCode.PASSWORD_RESET_ACCOUNT_NOT_FOUND);
 
         verify(emailSender, never()).send(anyString(), anyString(), anyString());
         assertThat(user.getPasswordResetCode()).isNull();
@@ -100,28 +107,47 @@ class PasswordResetServiceTest {
     @Test
     void 이메일이_등록되지_않은_계정은_메일을_보내지_않는다() {
         User noEmail = User.create(STUDENT_ID, passwordEncoder.encode("oldPassword1"), "테스터", null, null);
-        when(userRepository.findByStudentId(STUDENT_ID)).thenReturn(Optional.of(noEmail));
+        when(userRepository.findByStudentIdForUpdate(STUDENT_ID)).thenReturn(Optional.of(noEmail));
 
-        assertThatCode(() -> service.sendCode(STUDENT_ID, EMAIL)).doesNotThrowAnyException();
+        assertSendCodeFails(STUDENT_ID, EMAIL, UserErrorCode.PASSWORD_RESET_ACCOUNT_NOT_FOUND);
 
         verify(emailSender, never()).send(anyString(), anyString(), anyString());
     }
 
     @Test
-    void 쿨다운_안에_다시_요청하면_메일을_또_보내지_않는다() {
+    void 쿨다운_안에_다시_요청하면_429이고_메일을_또_보내지_않는다() {
         service.sendCode(STUDENT_ID, EMAIL);
-        service.sendCode(STUDENT_ID, EMAIL);
+
+        assertSendCodeFails(STUDENT_ID, EMAIL, UserErrorCode.VERIFICATION_CODE_RESEND_TOO_FAST);
 
         verify(emailSender, times(1)).send(anyString(), anyString(), anyString());
     }
 
     @Test
-    void 메일_발송이_실패해도_예외를_내지_않고_코드를_폐기한다() {
+    void 메일_발송이_실패하면_503이다() {
         doThrow(new IllegalStateException("smtp down")).when(emailSender).send(anyString(), anyString(), anyString());
 
-        assertThatCode(() -> service.sendCode(STUDENT_ID, EMAIL)).doesNotThrowAnyException();
+        assertSendCodeFails(STUDENT_ID, EMAIL, UserErrorCode.EMAIL_SEND_FAILED);
+    }
 
-        assertThat(user.getPasswordResetCode()).isNull();
+    @Test
+    void 첫_발송_뒤_재발송은_하루_5회까지이고_횟수를_알려준다() {
+        for (int expected = 0; expected <= 5; expected++) {
+            user.clearPasswordResetCode(); // 쿨다운을 건너뛰고 횟수 제한만 확인한다
+            assertThat(service.sendCode(STUDENT_ID, EMAIL).resendCount()).isEqualTo(expected);
+        }
+        user.clearPasswordResetCode();
+
+        assertSendCodeFails(STUDENT_ID, EMAIL, UserErrorCode.PASSWORD_RESET_RESEND_LIMIT_EXCEEDED);
+
+        verify(emailSender, times(6)).send(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void 날짜가_바뀌면_재발송_횟수가_초기화된다() {
+        user.recordPasswordResetSend(LocalDate.now(ZoneId.of("Asia/Seoul")).minusDays(1), 6);
+
+        assertThat(service.sendCode(STUDENT_ID, EMAIL).resendCount()).isZero();
     }
 
     @Test

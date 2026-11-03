@@ -10,11 +10,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -24,6 +27,7 @@ import java.util.regex.Pattern;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -51,6 +55,9 @@ class PasswordResetIntegrationTest {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @MockitoBean
     private EmailSender emailSender;
@@ -85,6 +92,13 @@ class PasswordResetIntegrationTest {
         return mockMvc.perform(post(path).contentType(MediaType.APPLICATION_JSON).content(json));
     }
 
+    private ResultActions sendCode(Account account) throws Exception {
+        return postJson("/api/auth/password-reset/send-code",
+            """
+            {"studentId":"%s","email":"%s"}
+            """.formatted(account.studentId(), account.email()));
+    }
+
     private String sentCode(String to) {
         ArgumentCaptor<String> body = ArgumentCaptor.forClass(String.class);
         verify(emailSender).send(eq(to), anyString(), body.capture());
@@ -107,11 +121,10 @@ class PasswordResetIntegrationTest {
     void 비밀번호_찾기_전체_흐름_코드발송_확인_재설정_새비밀번호로_로그인() throws Exception {
         Account account = signup();
 
-        postJson("/api/auth/password-reset/send-code",
-            """
-            {"studentId":"%s","email":"%s"}
-            """.formatted(account.studentId(), account.email()))
-            .andExpect(status().isOk());
+        sendCode(account)
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.resendCount").value(0))
+            .andExpect(jsonPath("$.data.maxResendCount").value(5));
         String code = sentCode(account.email());
 
         postJson("/api/auth/password-reset/verify-code",
@@ -168,23 +181,81 @@ class PasswordResetIntegrationTest {
     }
 
     @Test
-    void 없는_학번과_틀린_이메일도_성공과_똑같이_200이고_메일은_안_간다() throws Exception {
+    void 없는_학번과_틀린_이메일은_404이고_메일은_안_간다() throws Exception {
         Account account = signup();
 
         postJson("/api/auth/password-reset/send-code",
             """
             {"studentId":"%s","email":"someone@example.com"}
             """.formatted(account.studentId()))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.success").value(true));
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.code").value("PASSWORD_RESET_ACCOUNT_NOT_FOUND"));
         postJson("/api/auth/password-reset/send-code",
             """
             {"studentId":"000000000","email":"%s"}
             """.formatted(account.email()))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.success").value(true));
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.code").value("PASSWORD_RESET_ACCOUNT_NOT_FOUND"));
 
         verify(emailSender, never()).send(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void 이메일_형식이_틀리면_와이어프레임_문구로_400이다() throws Exception {
+        postJson("/api/auth/password-reset/send-code",
+            """
+            {"studentId":"202301589","email":"squirrel@inu"}
+            """)
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.errors[0].field").value("email"))
+            .andExpect(jsonPath("$.errors[0].message").value("이메일 형식이 올바르지 않아요 (예: name@inu.ac.kr)"));
+    }
+
+    @Test
+    void 쿨다운이_지나면_재발송되고_횟수를_알려주며_쿨다운_안에는_429다() throws Exception {
+        Account account = signup();
+        sendCode(account).andExpect(status().isOk());
+
+        sendCode(account)
+            .andExpect(status().isTooManyRequests())
+            .andExpect(jsonPath("$.code").value("VERIFICATION_CODE_RESEND_TOO_FAST"));
+
+        jdbcTemplate.update("""
+            update users set password_reset_code_issued_at = password_reset_code_issued_at - interval 61 second
+            where student_id = ?
+            """, account.studentId());
+
+        sendCode(account)
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.resendCount").value(1));
+    }
+
+    @Test
+    void 오늘_재발송을_다_쓰면_429이고_메일은_안_간다() throws Exception {
+        Account account = signup();
+        jdbcTemplate.update(
+            "update users set password_reset_send_count = 6, password_reset_send_date = ? where student_id = ?",
+            LocalDate.now(ZoneId.of("Asia/Seoul")), account.studentId());
+
+        sendCode(account)
+            .andExpect(status().isTooManyRequests())
+            .andExpect(jsonPath("$.code").value("PASSWORD_RESET_RESEND_LIMIT_EXCEEDED"));
+
+        verify(emailSender, never()).send(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void 메일_발송이_실패하면_503이고_코드와_횟수가_남지_않는다() throws Exception {
+        Account account = signup();
+        doThrow(new IllegalStateException("smtp down")).when(emailSender).send(anyString(), anyString(), anyString());
+
+        sendCode(account)
+            .andExpect(status().isServiceUnavailable())
+            .andExpect(jsonPath("$.code").value("EMAIL_SEND_FAILED"));
+
+        var user = userRepository.findByStudentId(account.studentId()).orElseThrow();
+        assertThat(user.getPasswordResetCode()).isNull();
+        assertThat(user.getPasswordResetSendDate()).isNull();
     }
 
     @Test

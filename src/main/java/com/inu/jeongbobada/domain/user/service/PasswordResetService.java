@@ -1,5 +1,6 @@
 package com.inu.jeongbobada.domain.user.service;
 
+import com.inu.jeongbobada.domain.user.dto.PasswordResetSendCodeResponse;
 import com.inu.jeongbobada.domain.user.entity.User;
 import com.inu.jeongbobada.domain.user.exception.UserErrorCode;
 import com.inu.jeongbobada.domain.user.repository.UserRepository;
@@ -11,8 +12,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Optional;
+import java.time.ZoneId;
 
 @Slf4j
 @Service
@@ -20,43 +22,47 @@ import java.util.Optional;
 public class PasswordResetService {
 
     private static final String MAIL_SUBJECT = "[정보바다] 비밀번호 재설정 인증코드";
+    private static final int MAX_DAILY_RESENDS = 5;
+    // 서버 시간대가 UTC여도 재발송 횟수는 한국 자정에 초기화되도록 고정한다
+    private static final ZoneId SERVICE_ZONE = ZoneId.of("Asia/Seoul");
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final VerificationCodeManager codeManager;
     private final EmailSender emailSender;
 
-    // 학번이 없거나, 가입 때 등록한 이메일과 다르거나, 메일 발송이 실패해도 호출자에게는 항상 똑같이 성공으로 보인다.
-    // 응답이 다르면 "이 학번은 가입돼 있다 / 이 이메일이 맞다"를 알아낼 수 있어서(user enumeration) 로그인 API와 같은 원칙을 따른다.
-    // 원인은 서버 로그로만 남긴다 (학번/이메일/코드는 로그에 남기지 않는다).
+    // 와이어프레임에 따라 학번·이메일 불일치를 구분해서 응답한다.
+    // 횟수를 정확히 세려고 행을 잠근다. 메일 발송이 실패하면 예외로 롤백돼 코드와 횟수가 남지 않는다.
     @Transactional
-    public void sendCode(String studentId, String email) {
+    public PasswordResetSendCodeResponse sendCode(String studentId, String email) {
         String normalizedEmail = EmailNormalizer.normalize(email);
-        Optional<User> found = userRepository.findByStudentId(studentId)
-            .filter(user -> normalizedEmail.equals(user.getEmail()));
+        User user = userRepository.findByStudentIdForUpdate(studentId)
+            .filter(found -> normalizedEmail.equals(found.getEmail()))
+            .orElseThrow(() -> new BusinessException(UserErrorCode.PASSWORD_RESET_ACCOUNT_NOT_FOUND));
 
-        if (found.isEmpty()) {
-            log.info("비밀번호 재설정 코드 요청 무시: 학번 또는 이메일 불일치");
-            return;
+        // 그날의 첫 발송은 재발송이 아니므로, 오늘 보낸 횟수가 곧 이번 발송의 재발송 번호다
+        LocalDate today = LocalDate.now(SERVICE_ZONE);
+        int resendCount = user.passwordResetSendCountOn(today);
+        if (resendCount > MAX_DAILY_RESENDS) {
+            throw new BusinessException(UserErrorCode.PASSWORD_RESET_RESEND_LIMIT_EXCEEDED);
         }
 
-        User user = found.get();
         LocalDateTime now = LocalDateTime.now();
         if (codeManager.isWithinResendCooldown(user.getPasswordResetCode(), now)) {
-            log.info("비밀번호 재설정 코드 요청 무시: 재발송 쿨다운 중");
-            return;
+            throw new BusinessException(UserErrorCode.VERIFICATION_CODE_RESEND_TOO_FAST);
         }
 
         String code = codeManager.generateCode();
         user.updatePasswordResetCode(codeManager.issue(code, now));
+        user.recordPasswordResetSend(today, resendCount + 1);
 
         try {
             emailSender.send(user.getEmail(), MAIL_SUBJECT, mailBody(code));
         } catch (Exception e) {
-            // 못 받은 코드가 쿨다운으로 재요청을 막지 않도록 폐기
             log.error("비밀번호 재설정 메일 발송 실패", e);
-            user.clearPasswordResetCode();
+            throw new BusinessException(UserErrorCode.EMAIL_SEND_FAILED);
         }
+        return new PasswordResetSendCodeResponse(resendCount, MAX_DAILY_RESENDS);
     }
 
     // 확인만 하고 코드는 소모하지 않는다 (화면에서 다음 단계로 넘어가도 되는지 판단하는 용도).
