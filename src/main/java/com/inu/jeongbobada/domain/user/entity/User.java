@@ -6,6 +6,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDateTime;
 
@@ -84,6 +85,29 @@ public class User extends BaseEntity {
 
     @Column(name = "REFRESH_TOKEN_EXPIRES_AT")
     private LocalDateTime refreshTokenExpiresAt;
+
+    // 기본값은 이 컬럼이 생기기 전에 만들어진 행과 INSERT 문에 컬럼이 없는 경우를 위한 것
+    @ColumnDefault("0")
+    @Column(name = "LOGIN_FAILED_ATTEMPTS", nullable = false)
+    private int loginFailedAttempts;
+
+    @Column(name = "LOGIN_LOCKED_UNTIL")
+    private LocalDateTime loginLockedUntil;
+
+    public int recordLoginFailure() {
+        return ++loginFailedAttempts;
+    }
+
+    // 잠금이 풀린 뒤에는 다시 1회부터 센다
+    public void lockLogin(LocalDateTime until) {
+        this.loginFailedAttempts = 0;
+        this.loginLockedUntil = until;
+    }
+
+    public void clearLoginFailures() {
+        this.loginFailedAttempts = 0;
+        this.loginLockedUntil = null;
+    }
 
     // 로그인/재발급 시 새 refresh token으로 교체
     public void updateRefreshToken(String refreshToken, LocalDateTime expiresAt) {

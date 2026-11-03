@@ -6,6 +6,7 @@ import com.inu.jeongbobada.domain.user.dto.ReissueRequest;
 import com.inu.jeongbobada.domain.user.dto.SignupRequest;
 import com.inu.jeongbobada.domain.user.dto.TokenResponse;
 import com.inu.jeongbobada.domain.user.entity.User;
+import com.inu.jeongbobada.domain.user.exception.LoginLockedException;
 import com.inu.jeongbobada.domain.user.exception.UserErrorCode;
 import com.inu.jeongbobada.domain.user.repository.UserRepository;
 import com.inu.jeongbobada.global.exception.BusinessException;
@@ -14,6 +15,7 @@ import com.inu.jeongbobada.global.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,9 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
+
+    private static final int MAX_LOGIN_FAILURES = 5;
+    private static final Duration LOGIN_LOCK_DURATION = Duration.ofMinutes(5);
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -69,17 +74,46 @@ public class AuthService {
         return new NicknameCheckResponse(!userRepository.existsByNickname(nickname));
     }
 
-    // 학번+비밀번호 검증(AuthenticationManager에 위임) 통과하면 access/refresh 토큰 새로 발급
-    @Transactional
+    // 학번+비밀번호 검증(AuthenticationManager에 위임) 통과하면 access/refresh 토큰 새로 발급.
+    // 틀린 횟수는 예외가 나도 커밋돼야 해서 BusinessException으로 롤백하지 않는다.
+    @Transactional(noRollbackFor = BusinessException.class)
     public TokenResponse login(LoginRequest request) {
-        authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(request.studentId(), request.password())
-        );
+        User user = userRepository.findByStudentIdForUpdate(request.studentId())
+            .orElseThrow(() -> new BusinessException(UserErrorCode.STUDENT_ID_NOT_REGISTERED));
 
-        User user = userRepository.findByStudentId(request.studentId())
-            .orElseThrow(() -> new BusinessException(UserErrorCode.USER_NOT_FOUND));
+        LocalDateTime now = LocalDateTime.now();
+        if (user.getLoginLockedUntil() != null && now.isBefore(user.getLoginLockedUntil())) {
+            throw lockedException(now, user.getLoginLockedUntil());
+        }
 
+        try {
+            authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.studentId(), request.password())
+            );
+        } catch (BadCredentialsException e) {
+            throw recordLoginFailure(user, now);
+        }
+
+        user.clearLoginFailures();
         return issueTokens(user);
+    }
+
+    private BusinessException recordLoginFailure(User user, LocalDateTime now) {
+        int failedAttempts = user.recordLoginFailure();
+        if (failedAttempts >= MAX_LOGIN_FAILURES) {
+            LocalDateTime lockedUntil = now.plus(LOGIN_LOCK_DURATION);
+            user.lockLogin(lockedUntil);
+            return lockedException(now, lockedUntil);
+        }
+        return new BusinessException(
+            UserErrorCode.INVALID_CREDENTIALS,
+            "%s (%d/%d회)".formatted(UserErrorCode.INVALID_CREDENTIALS.getMessage(), failedAttempts, MAX_LOGIN_FAILURES)
+        );
+    }
+
+    // 초 단위로 내리면 남은 시간이 0이 될 수 있어 올림한다
+    private LoginLockedException lockedException(LocalDateTime now, LocalDateTime lockedUntil) {
+        return new LoginLockedException(Duration.between(now, lockedUntil).plusSeconds(1).minusNanos(1).toSeconds());
     }
 
     // 클라이언트가 보낸 refresh token을 검증(서명/만료 + DB 저장값 일치)하고, 통과하면 토큰 재발급

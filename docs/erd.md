@@ -61,6 +61,8 @@ erDiagram
         enum ROLE "USER/ADMIN"
         varchar DEPARTMENT
         varchar REFRESH_TOKEN
+        int LOGIN_FAILED_ATTEMPTS
+        datetime LOGIN_LOCKED_UNTIL
         varchar PASSWORD_RESET_CODE_HASH "비밀번호 찾기 코드"
         varchar EMAIL_CHANGE_CODE_HASH "이메일 변경 코드"
         varchar PENDING_EMAIL "변경 대기 이메일"
