@@ -79,7 +79,7 @@ check "에러 응답 형식"                "$BASE_URL/api/no-such"  404 '"code"
 # 가입 → 로그인으로 JWT가 실제로 발급되는지 (시크릿 키 등 JWT 설정 확인). 이 DB는 끝나면 down -v로 지워진다.
 student_id="9$(printf '%08d' $((RANDOM * RANDOM % 100000000)))"
 curl -s -o /dev/null -X POST "$BASE_URL/api/auth/signup" -H 'Content-Type: application/json' \
-  -d "{\"studentId\":\"$student_id\",\"password\":\"password1\",\"nickname\":\"smoke$((RANDOM % 1000))\",\"email\":\"smoke$student_id@example.com\"}"
+  -d "{\"studentId\":\"$student_id\",\"password\":\"password1\",\"nickname\":\"sm$((RANDOM % 1000))\",\"email\":\"smoke$student_id@example.com\"}"
 login_body=$(curl -s -w '\n%{http_code}' -X POST "$BASE_URL/api/auth/login" -H 'Content-Type: application/json' \
   -d "{\"studentId\":\"$student_id\",\"password\":\"password1\"}")
 if [ "${login_body##*$'\n'}" != "200" ] || [[ "$login_body" != *'"accessToken"'* ]]; then
