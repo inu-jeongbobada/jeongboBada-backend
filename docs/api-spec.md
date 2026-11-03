@@ -92,7 +92,7 @@
 |---|---|---|
 | 401 `AUTHENTICATION_REQUIRED` | access token 없음·만료·위조, 또는 탈퇴·삭제된 사용자의 토큰 (서로 구분하지 않음) | `reissue` 후 원래 요청 재시도. `reissue`도 실패하면 로그아웃 처리 |
 | 401 `INVALID_REFRESH_TOKEN` | `reissue` 실패 — refresh 없음·만료·위조·이미 교체됨 | 로그아웃 처리 (재시도하지 않음) |
-| 401 `INVALID_CREDENTIALS` | 로그인 실패 (학번 없음과 비밀번호 틀림을 구분하지 않음) | 로그인 폼에 오류 표시. **재발급 대상 아님** |
+| 401 `INVALID_CREDENTIALS` | 로그인 비밀번호 틀림. `message`에 실패 횟수 포함 (예: `(2/5회)`) | 로그인 폼에 오류 표시. **재발급 대상 아님** |
 | 400 `CURRENT_PASSWORD_MISMATCH` | 비밀번호·이메일 변경 때 현재 비밀번호 틀림 | 폼에 오류 표시. **401이 아니다** (예전엔 401이었음, #115) |
 | 403 `FORBIDDEN`, `PROFESSOR_COMMENT_FORBIDDEN` | 로그인은 됐지만 권한 없음 (예: 남의 교수 후기 수정) | 재발급하지 않는다 |
 
@@ -135,13 +135,15 @@
 | 400 | `INVALID_VERIFICATION_CODE` | 인증코드 없음/만료/불일치 (사유는 구분하지 않음) |
 | 400 | `SAME_EMAIL` | 현재 이메일과 같은 이메일로 변경 요청 |
 | 400 | `CURRENT_PASSWORD_MISMATCH` | 비밀번호·이메일 변경 시 현재 비밀번호 불일치 (401 아님 — 재발급 대상 아님) |
-| 401 | `INVALID_CREDENTIALS` | 로그인 실패 (학번 없음과 비밀번호 틀림을 구분하지 않음) |
+| 401 | `INVALID_CREDENTIALS` | 로그인 비밀번호 틀림. `message`에 실패 횟수 포함 (예: `(2/5회)`) |
 | 401 | `INVALID_REFRESH_TOKEN` | refresh token 무효/만료 → **로그아웃 처리** |
 | 404 | `USER_NOT_FOUND` | 존재하지 않는 사용자 |
+| 404 | `STUDENT_ID_NOT_REGISTERED` | 로그인 시 가입되지 않은 학번 |
 | 409 | `DUPLICATE_STUDENT_ID` | 이미 가입된 학번 |
 | 409 | `DUPLICATE_NICKNAME` | 이미 사용 중인 닉네임 |
 | 409 | `DUPLICATE_EMAIL` | 이미 사용 중인 이메일 |
 | 429 | `VERIFICATION_CODE_RESEND_TOO_FAST` | 인증코드 재발송 60초 제한 |
+| 429 | `LOGIN_LOCKED` | 로그인 5회 실패로 10분 잠금. 남은 시간(초)은 `Retry-After` 헤더 |
 | 503 | `EMAIL_SEND_FAILED` | 메일 발송 실패 |
 | 404 | `PROFESSOR_NOT_FOUND` | 존재하지 않는 교수 |
 | 404 | `COURSE_NOT_FOUND` | 존재하지 않는 과목 |
