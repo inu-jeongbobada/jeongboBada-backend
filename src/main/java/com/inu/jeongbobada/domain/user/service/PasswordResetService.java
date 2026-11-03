@@ -2,6 +2,7 @@ package com.inu.jeongbobada.domain.user.service;
 
 import com.inu.jeongbobada.domain.user.dto.PasswordResetSendCodeResponse;
 import com.inu.jeongbobada.domain.user.entity.User;
+import com.inu.jeongbobada.domain.user.entity.VerificationCode;
 import com.inu.jeongbobada.domain.user.exception.UserErrorCode;
 import com.inu.jeongbobada.domain.user.repository.UserRepository;
 import com.inu.jeongbobada.global.exception.BusinessException;
@@ -79,24 +80,48 @@ public class PasswordResetService {
     public void resetPassword(String studentId, String code, String newPassword) {
         User user = checkCode(studentId, code);
 
+        // 코드를 소모하지 않아서, 다른 비밀번호로 같은 코드를 다시 보낼 수 있다
+        if (passwordEncoder.matches(newPassword, user.getPassword())) {
+            throw new BusinessException(UserErrorCode.PASSWORD_RESET_SAME_PASSWORD);
+        }
+
         user.updatePassword(passwordEncoder.encode(newPassword));
         user.clearPasswordResetCode();
         user.clearRefreshToken();
+        // 메일로 본인 확인을 마쳤으므로, 잠금 화면에서 온 사용자가 새 비밀번호로 바로 로그인할 수 있게 한다
+        user.clearLoginFailures();
     }
 
-    // 없는 학번 / 코드 없음 / 만료 / 불일치를 모두 같은 에러로 응답
+    // 실패 횟수를 정확히 세려고 행을 잠근다.
     private User checkCode(String studentId, String code) {
-        User user = userRepository.findByStudentId(studentId)
+        User user = userRepository.findByStudentIdForUpdate(studentId)
             .orElseThrow(() -> new BusinessException(UserErrorCode.INVALID_VERIFICATION_CODE));
 
-        VerificationCodeManager.Verification result =
-            codeManager.verify(user.getPasswordResetCode(), code, LocalDateTime.now());
+        VerificationCode stored = user.getPasswordResetCode();
+        LocalDateTime now = LocalDateTime.now();
+        VerificationCodeManager.Verification result = codeManager.verify(stored, code, now);
         user.updatePasswordResetCode(result.next());
 
         if (!result.matched()) {
-            throw new BusinessException(UserErrorCode.INVALID_VERIFICATION_CODE);
+            throw failureOf(stored, result.next(), now);
         }
         return user;
+    }
+
+    // 와이어프레임의 화면이 사유마다 달라서 구분한다. 없는 학번과 코드 없음만 구분하지 않는다.
+    private BusinessException failureOf(VerificationCode stored, VerificationCode next, LocalDateTime now) {
+        if (stored == null) {
+            return new BusinessException(UserErrorCode.INVALID_VERIFICATION_CODE);
+        }
+        if (stored.isExpired(now)) {
+            return new BusinessException(UserErrorCode.PASSWORD_RESET_CODE_EXPIRED);
+        }
+        if (next == null) {
+            return new BusinessException(UserErrorCode.PASSWORD_RESET_CODE_ATTEMPTS_EXCEEDED);
+        }
+        return new BusinessException(UserErrorCode.PASSWORD_RESET_CODE_MISMATCH,
+            "%s (%d/%d회)".formatted(UserErrorCode.PASSWORD_RESET_CODE_MISMATCH.getMessage(),
+                next.failedAttempts(), VerificationCodeManager.MAX_FAILED_ATTEMPTS));
     }
 
     private String mailBody(String code) {

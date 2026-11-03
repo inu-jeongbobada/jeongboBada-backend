@@ -48,7 +48,6 @@ class PasswordResetServiceTest {
     @BeforeEach
     void setUp() {
         user = User.create(STUDENT_ID, passwordEncoder.encode("oldPassword1"), "테스터", null, EMAIL);
-        when(userRepository.findByStudentId(STUDENT_ID)).thenReturn(Optional.of(user));
         when(userRepository.findByStudentIdForUpdate(STUDENT_ID)).thenReturn(Optional.of(user));
     }
 
@@ -161,12 +160,15 @@ class PasswordResetServiceTest {
     }
 
     @Test
-    void 틀린_코드는_INVALID_VERIFICATION_CODE이고_실패_횟수가_쌓인다() {
-        issueCodeAndGet();
+    void 틀린_코드는_불일치_에러로_실패_횟수를_알려주고_횟수가_쌓인다() {
+        String code = issueCodeAndGet();
+        String wrong = code.equals("000000") ? "111111" : "000000";
 
-        assertThatThrownBy(() -> service.verifyCode(STUDENT_ID, "000000"))
-            .isInstanceOfSatisfying(BusinessException.class,
-                e -> assertThat(e.getErrorCode()).isEqualTo(UserErrorCode.INVALID_VERIFICATION_CODE));
+        assertThatThrownBy(() -> service.verifyCode(STUDENT_ID, wrong))
+            .isInstanceOfSatisfying(BusinessException.class, e -> {
+                assertThat(e.getErrorCode()).isEqualTo(UserErrorCode.PASSWORD_RESET_CODE_MISMATCH);
+                assertThat(e.getMessage()).contains("(1/5회)");
+            });
         assertThat(user.getPasswordResetCode().failedAttempts()).isEqualTo(1);
     }
 
@@ -175,9 +177,14 @@ class PasswordResetServiceTest {
         String code = issueCodeAndGet();
         String wrong = code.equals("000000") ? "111111" : "000000";
 
-        for (int i = 0; i < VerificationCodeManager.MAX_FAILED_ATTEMPTS; i++) {
-            assertThatThrownBy(() -> service.verifyCode(STUDENT_ID, wrong)).isInstanceOf(BusinessException.class);
+        for (int i = 0; i < VerificationCodeManager.MAX_FAILED_ATTEMPTS - 1; i++) {
+            assertThatThrownBy(() -> service.verifyCode(STUDENT_ID, wrong))
+                .isInstanceOfSatisfying(BusinessException.class,
+                    e -> assertThat(e.getErrorCode()).isEqualTo(UserErrorCode.PASSWORD_RESET_CODE_MISMATCH));
         }
+        assertThatThrownBy(() -> service.verifyCode(STUDENT_ID, wrong))
+            .isInstanceOfSatisfying(BusinessException.class,
+                e -> assertThat(e.getErrorCode()).isEqualTo(UserErrorCode.PASSWORD_RESET_CODE_ATTEMPTS_EXCEEDED));
 
         assertThat(user.getPasswordResetCode()).isNull();
         assertThatThrownBy(() -> service.verifyCode(STUDENT_ID, code)).isInstanceOf(BusinessException.class);
@@ -189,12 +196,15 @@ class PasswordResetServiceTest {
         LocalDateTime issuedAt = LocalDateTime.now().minusMinutes(10);
         user.updatePasswordResetCode(VerificationCode.issue(passwordEncoder.encode(code), issuedAt, issuedAt.plusMinutes(5)));
 
-        assertThatThrownBy(() -> service.verifyCode(STUDENT_ID, code)).isInstanceOf(BusinessException.class);
+        assertThatThrownBy(() -> service.verifyCode(STUDENT_ID, code))
+            .isInstanceOfSatisfying(BusinessException.class,
+                e -> assertThat(e.getErrorCode()).isEqualTo(UserErrorCode.PASSWORD_RESET_CODE_EXPIRED));
+        assertThat(user.getPasswordResetCode()).isNull();
     }
 
     @Test
-    void 없는_학번은_코드가_틀린_것과_같은_에러다() {
-        when(userRepository.findByStudentId("999999999")).thenReturn(Optional.empty());
+    void 없는_학번은_코드가_없는_것과_같은_에러다() {
+        when(userRepository.findByStudentIdForUpdate("999999999")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.verifyCode("999999999", "123456"))
             .isInstanceOfSatisfying(BusinessException.class,
@@ -212,6 +222,21 @@ class PasswordResetServiceTest {
         assertThat(passwordEncoder.matches("oldPassword1", user.getPassword())).isFalse();
         assertThat(user.getPasswordResetCode()).isNull();
         assertThat(user.getRefreshToken()).isNull();
+    }
+
+    @Test
+    void 이전과_같은_비밀번호는_거부하고_코드는_유지해서_다른_비밀번호로_다시_시도할_수_있다() {
+        user.updateRefreshToken("refresh-token", LocalDateTime.now().plusDays(1));
+        String code = issueCodeAndGet();
+
+        assertThatThrownBy(() -> service.resetPassword(STUDENT_ID, code, "oldPassword1"))
+            .isInstanceOfSatisfying(BusinessException.class,
+                e -> assertThat(e.getErrorCode()).isEqualTo(UserErrorCode.PASSWORD_RESET_SAME_PASSWORD));
+        assertThat(user.getPasswordResetCode().failedAttempts()).isZero();
+        assertThat(user.getRefreshToken()).isEqualTo("refresh-token");
+
+        service.resetPassword(STUDENT_ID, code, "newPassword1");
+        assertThat(passwordEncoder.matches("newPassword1", user.getPassword())).isTrue();
     }
 
     @Test

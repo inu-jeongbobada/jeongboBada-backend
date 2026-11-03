@@ -165,19 +165,85 @@ class PasswordResetIntegrationTest {
 
         // 요청 하나하나가 별도 트랜잭션 — 예외로 롤백됐다면 횟수가 쌓이지 않아 여기서 계속 400만 나오고
         // 마지막의 "올바른 코드"가 통과해버린다.
-        for (int i = 0; i < 5; i++) {
-            postJson("/api/auth/password-reset/verify-code",
-                """
-                {"studentId":"%s","code":"%s"}
-                """.formatted(account.studentId(), wrong))
-                .andExpect(status().isBadRequest());
+        String wrongJson = """
+            {"studentId":"%s","code":"%s"}
+            """.formatted(account.studentId(), wrong);
+        for (int i = 1; i <= 4; i++) {
+            postJson("/api/auth/password-reset/verify-code", wrongJson)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("PASSWORD_RESET_CODE_MISMATCH"))
+                .andExpect(jsonPath("$.message").value("인증번호가 일치하지 않아요 (%d/5회)".formatted(i)));
         }
+        postJson("/api/auth/password-reset/verify-code", wrongJson)
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("PASSWORD_RESET_CODE_ATTEMPTS_EXCEEDED"));
 
         postJson("/api/auth/password-reset/verify-code",
             """
             {"studentId":"%s","code":"%s"}
             """.formatted(account.studentId(), code))
-            .andExpect(status().isBadRequest());
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("INVALID_VERIFICATION_CODE"));
+    }
+
+    @Test
+    void 시간이_지난_코드는_만료_에러다() throws Exception {
+        Account account = signup();
+        sendCode(account).andExpect(status().isOk());
+        String code = sentCode(account.email());
+        jdbcTemplate.update("""
+            update users set password_reset_code_expires_at = password_reset_code_issued_at
+            where student_id = ?
+            """, account.studentId());
+
+        postJson("/api/auth/password-reset/verify-code",
+            """
+            {"studentId":"%s","code":"%s"}
+            """.formatted(account.studentId(), code))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("PASSWORD_RESET_CODE_EXPIRED"));
+    }
+
+    @Test
+    void 이전과_같은_비밀번호로는_재설정할_수_없고_같은_코드로_다시_시도할_수_있다() throws Exception {
+        Account account = signup();
+        sendCode(account).andExpect(status().isOk());
+        String code = sentCode(account.email());
+
+        postJson("/api/auth/password-reset",
+            """
+            {"studentId":"%s","code":"%s","newPassword":"%s"}
+            """.formatted(account.studentId(), code, PASSWORD))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("PASSWORD_RESET_SAME_PASSWORD"));
+
+        postJson("/api/auth/password-reset",
+            """
+            {"studentId":"%s","code":"%s","newPassword":"newPassword1"}
+            """.formatted(account.studentId(), code))
+            .andExpect(status().isOk());
+        login(account, "newPassword1");
+    }
+
+    @Test
+    void 재설정에_성공하면_로그인_잠금이_풀린다() throws Exception {
+        Account account = signup();
+        String wrongLogin = """
+            {"studentId":"%s","password":"wrongPassword1"}
+            """.formatted(account.studentId());
+        for (int i = 0; i < 5; i++) {
+            postJson("/api/auth/login", wrongLogin);
+        }
+        postJson("/api/auth/login", wrongLogin).andExpect(status().isTooManyRequests());
+
+        sendCode(account).andExpect(status().isOk());
+        postJson("/api/auth/password-reset",
+            """
+            {"studentId":"%s","code":"%s","newPassword":"newPassword1"}
+            """.formatted(account.studentId(), sentCode(account.email())))
+            .andExpect(status().isOk());
+
+        login(account, "newPassword1");
     }
 
     @Test

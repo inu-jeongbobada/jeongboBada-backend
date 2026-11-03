@@ -16,12 +16,17 @@ public enum UserErrorCode implements BaseErrorCode {
     INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "INVALID_REFRESH_TOKEN", "유효하지 않거나 만료된 Refresh Token입니다"), // 401
     CURRENT_PASSWORD_MISMATCH(HttpStatus.BAD_REQUEST, "CURRENT_PASSWORD_MISMATCH", "현재 비밀번호가 일치하지 않습니다"), // 400 (401이면 프론트의 토큰 재발급 인터셉터와 충돌)
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "DUPLICATE_EMAIL", "이미 사용 중인 이메일입니다"), // 409
-    // 코드가 틀렸는지/만료됐는지/애초에 없는지를 구분해서 알려주지 않는다 (추측 공격에 힌트를 주지 않기 위함)
+    // 이메일 변경은 코드가 틀렸는지/만료됐는지/애초에 없는지를 구분해서 알려주지 않는다 (추측 공격에 힌트를 주지 않기 위함)
+    // 비밀번호 찾기는 와이어프레임 화면에 맞춰 아래 PASSWORD_RESET_CODE_*로 구분하고, 없는 학번과 코드 없음에만 이 코드를 쓴다
     INVALID_VERIFICATION_CODE(HttpStatus.BAD_REQUEST, "INVALID_VERIFICATION_CODE", "인증코드가 올바르지 않거나 만료되었습니다"), // 400
     SAME_EMAIL(HttpStatus.BAD_REQUEST, "SAME_EMAIL", "현재 사용 중인 이메일과 동일합니다"), // 400
     VERIFICATION_CODE_RESEND_TOO_FAST(HttpStatus.TOO_MANY_REQUESTS, "VERIFICATION_CODE_RESEND_TOO_FAST", "인증코드는 잠시 후 다시 요청할 수 있습니다"), // 429
     PASSWORD_RESET_ACCOUNT_NOT_FOUND(HttpStatus.NOT_FOUND, "PASSWORD_RESET_ACCOUNT_NOT_FOUND", "입력한 이메일과 학번으로 가입된 계정을 찾을 수 없어요"), // 404
     PASSWORD_RESET_RESEND_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "PASSWORD_RESET_RESEND_LIMIT_EXCEEDED", "재발송은 하루 5회까지 가능해요"), // 429
+    PASSWORD_RESET_CODE_MISMATCH(HttpStatus.BAD_REQUEST, "PASSWORD_RESET_CODE_MISMATCH", "인증번호가 일치하지 않아요"), // 400
+    PASSWORD_RESET_CODE_ATTEMPTS_EXCEEDED(HttpStatus.BAD_REQUEST, "PASSWORD_RESET_CODE_ATTEMPTS_EXCEEDED", "5회 잘못 입력해 인증이 중단되었어요. 인증번호를 다시 받거나 운영진에게 문의해주세요"), // 400
+    PASSWORD_RESET_CODE_EXPIRED(HttpStatus.BAD_REQUEST, "PASSWORD_RESET_CODE_EXPIRED", "입력 시간이 초과되었으니 인증번호를 다시 받아주세요"), // 400
+    PASSWORD_RESET_SAME_PASSWORD(HttpStatus.BAD_REQUEST, "PASSWORD_RESET_SAME_PASSWORD", "이전과 같은 비밀번호는 쓸 수 없어요"), // 400
     EMAIL_SEND_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "EMAIL_SEND_FAILED", "이메일 발송에 실패했습니다. 잠시 후 다시 시도해주세요"), // 503
     ;
 
