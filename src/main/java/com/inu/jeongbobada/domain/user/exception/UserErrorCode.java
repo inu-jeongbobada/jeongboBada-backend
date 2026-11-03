@@ -20,6 +20,8 @@ public enum UserErrorCode implements BaseErrorCode {
     INVALID_VERIFICATION_CODE(HttpStatus.BAD_REQUEST, "INVALID_VERIFICATION_CODE", "인증코드가 올바르지 않거나 만료되었습니다"), // 400
     SAME_EMAIL(HttpStatus.BAD_REQUEST, "SAME_EMAIL", "현재 사용 중인 이메일과 동일합니다"), // 400
     VERIFICATION_CODE_RESEND_TOO_FAST(HttpStatus.TOO_MANY_REQUESTS, "VERIFICATION_CODE_RESEND_TOO_FAST", "인증코드는 잠시 후 다시 요청할 수 있습니다"), // 429
+    PASSWORD_RESET_ACCOUNT_NOT_FOUND(HttpStatus.NOT_FOUND, "PASSWORD_RESET_ACCOUNT_NOT_FOUND", "입력한 이메일과 학번으로 가입된 계정을 찾을 수 없어요"), // 404
+    PASSWORD_RESET_RESEND_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "PASSWORD_RESET_RESEND_LIMIT_EXCEEDED", "재발송은 하루 5회까지 가능해요"), // 429
     EMAIL_SEND_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "EMAIL_SEND_FAILED", "이메일 발송에 실패했습니다. 잠시 후 다시 시도해주세요"), // 503
     ;
 

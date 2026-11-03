@@ -63,6 +63,8 @@ erDiagram
         varchar REFRESH_TOKEN
         int LOGIN_FAILED_ATTEMPTS
         datetime LOGIN_LOCKED_UNTIL
+        int PASSWORD_RESET_SEND_COUNT
+        date PASSWORD_RESET_SEND_DATE
         varchar PASSWORD_RESET_CODE_HASH "비밀번호 찾기 코드"
         varchar EMAIL_CHANGE_CODE_HASH "이메일 변경 코드"
         varchar PENDING_EMAIL "변경 대기 이메일"
@@ -179,6 +181,8 @@ erDiagram
 | `PASSWORD_RESET_CODE_ISSUED_AT` | DATETIME | | 발급 시각 (재발송 쿨다운 60초 계산) |
 | `PASSWORD_RESET_CODE_EXPIRES_AT` | DATETIME | | 만료 시각 (발급 후 5분) |
 | `PASSWORD_RESET_CODE_FAILED_ATTEMPTS` | INT | | 틀린 횟수 (5회면 코드 폐기) |
+| `PASSWORD_RESET_SEND_COUNT` | INT | | `PASSWORD_RESET_SEND_DATE`에 발송한 횟수, 기본값 0 (재발송 하루 5회 제한) |
+| `PASSWORD_RESET_SEND_DATE` | DATE | | 마지막 발송일 (한국 시간 기준). 오늘이 아니면 횟수를 0으로 본다 |
 | `EMAIL_CHANGE_CODE_HASH` | VARCHAR(100) | | 이메일 변경 인증코드 해시 — **비밀번호 찾기 코드와 컬럼을 분리** (코드 재사용 우회 방지) |
 | `EMAIL_CHANGE_CODE_ISSUED_AT` | DATETIME | | |
 | `EMAIL_CHANGE_CODE_EXPIRES_AT` | DATETIME | | |

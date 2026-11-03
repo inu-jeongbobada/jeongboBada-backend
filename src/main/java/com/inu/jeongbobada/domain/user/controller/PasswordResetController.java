@@ -2,6 +2,7 @@ package com.inu.jeongbobada.domain.user.controller;
 
 import com.inu.jeongbobada.domain.user.dto.PasswordResetRequest;
 import com.inu.jeongbobada.domain.user.dto.PasswordResetSendCodeRequest;
+import com.inu.jeongbobada.domain.user.dto.PasswordResetSendCodeResponse;
 import com.inu.jeongbobada.domain.user.dto.PasswordResetVerifyCodeRequest;
 import com.inu.jeongbobada.domain.user.service.PasswordResetService;
 import com.inu.jeongbobada.global.common.ApiResponse;
@@ -21,12 +22,10 @@ public class PasswordResetController {
 
     private final PasswordResetService passwordResetService;
 
-    // 학번/이메일이 맞든 틀리든 항상 200 — 가입 여부를 알아낼 수 없게 한다.
     @PostMapping("/send-code")
-    public ResponseEntity<ApiResponse<Void>> sendCode(@Valid @RequestBody PasswordResetSendCodeRequest request) {
-        passwordResetService.sendCode(request.studentId(), request.email());
-
-        ApiResponse<Void> response = ApiResponse.ok(null);
+    public ResponseEntity<ApiResponse<PasswordResetSendCodeResponse>> sendCode(@Valid @RequestBody PasswordResetSendCodeRequest request) {
+        ApiResponse<PasswordResetSendCodeResponse> response =
+            ApiResponse.ok(passwordResetService.sendCode(request.studentId(), request.email()));
         return ResponseEntity.status(response.httpStatus()).body(response);
     }
 

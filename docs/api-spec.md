@@ -13,7 +13,7 @@
 | POST | /api/auth/login | 로그인 (JWT 발급) | { <br/> "studentId": "202012345", <br/> "password": "..." <br/>} | 200 <br/> { "success": true, "data": { <br/> "accessToken": "eyJ...", <br/> "refreshToken": "eyJ..." <br/>} } | 구현완료 |
 | POST | /api/auth/reissue | Access Token 재발급 | { <br/> "refreshToken": "eyJ..." <br/>} | 200 <br/> { "success": true, "data": { <br/> "accessToken": "eyJ...", <br/> "refreshToken": "eyJ..." <br/>} } | 구현완료 |
 | POST | /api/auth/logout | 로그아웃 (서버의 refresh token 무효화) | { <br/> "refreshToken": "..." <br/>} (권장) <br/> 또는 Header: `Authorization: Bearer {accessToken}` (예전 방식) | 200 <br/> { "success": true, "data": null } <br/> 둘 다 없으면 400 | 구현완료 |
-| POST | /api/auth/password-reset/send-code | 비밀번호 찾기 ① 인증코드 발송 | { <br/> "studentId": "202012345", <br/> "email": "가입 때 등록한 이메일" <br/>} | 200 <br/> { "success": true, "data": null } | 구현완료 |
+| POST | /api/auth/password-reset/send-code | 비밀번호 찾기 ① 인증코드 발송 | { <br/> "studentId": "202012345", <br/> "email": "가입 때 등록한 이메일" <br/>} | 200 <br/> { "success": true, "data": { "resendCount": 1, "maxResendCount": 5 } } | 구현완료 |
 | POST | /api/auth/password-reset/verify-code | 비밀번호 찾기 ② 인증코드 확인 (코드는 소모되지 않음) | { <br/> "studentId": "202012345", <br/> "code": "숫자 6자리" <br/>} | 200 <br/> { "success": true, "data": null } | 구현완료 |
 | POST | /api/auth/password-reset | 비밀번호 찾기 ③ 비밀번호 재설정 (코드 1회 소모) | { <br/> "studentId": "202012345", <br/> "code": "숫자 6자리", <br/> "newPassword": "영문+숫자 8~64자" <br/>} | 200 <br/> { "success": true, "data": null } | 구현완료 |
 | GET | /api/users/me | 내 정보 조회 (로그인 필요) | Header: <br/> `Authorization: Bearer {accessToken}` | 200 <br/> { "success": true, "data": { <br/> "nickname": "바다", <br/> "studentId": "202012345", <br/> "email": "user@example.com", <br/> "department": null <br/>} } | 구현완료 |
@@ -22,7 +22,7 @@
 
 - 닉네임 중복확인은 **닉네임만 제공**한다. 학번/이메일 중복확인은 제공하지 않음 (이 학번/이메일로 가입돼 있다는 걸 누구나 조회할 수 있게 되는 user enumeration 방지) — 가입 시도 시 409로만 안내. 확인 시점과 실제 가입 시점 사이에 다른 사람이 선점할 수 있어 최종 검증은 `signup`에서 다시 함
 - 회원가입에 `email`이 **필수**로 추가됨 (비밀번호 찾기용). 이미 가입된 이메일이면 409. 대소문자/앞뒤 공백은 무시하고 비교
-- 비밀번호 찾기: `send-code`는 **학번이 없거나 이메일이 달라도, 메일 발송이 실패해도 항상 같은 200** (가입 여부 노출 방지). 인증코드는 6자리, 5분 유효, 재발송은 60초 뒤부터
+- 비밀번호 찾기: `send-code`는 학번이 없거나 이메일이 다르면 404 `PASSWORD_RESET_ACCOUNT_NOT_FOUND`, 60초 안에 재요청하면 429 `VERIFICATION_CODE_RESEND_TOO_FAST`, 재발송을 다 쓰면 429 `PASSWORD_RESET_RESEND_LIMIT_EXCEEDED`, 발송 실패는 503 `EMAIL_SEND_FAILED`. 인증코드는 6자리, 5분 유효. 재발송은 첫 발송을 빼고 하루 5회(한국 시간 자정에 초기화)이고, `resendCount`는 첫 발송이면 0, 재발송이면 n/5회의 n이다
 - 내 정보 조회(`GET /api/users/me`)는 **본인 전용**이라 `studentId`·`email`을 내려준다. `email`은 이메일 기능 이전 가입자면 null, `department`는 가입 때 받지 않아 **현재 항상 null**. 이름·학년·부전공·프로필 사진은 마이페이지 디자인 확정 후 추가 예정(필드 추가만 하므로 기존 클라이언트는 영향 없음)
 - 비밀번호 찾기: 서버는 `verify-code` 통과를 기억하지 않는다 — 화면에서 다음 단계로 넘어가는 용도이고, 재설정 요청(`/api/auth/password-reset`)에도 **같은 `code`를 다시 보내야** 한다
 - 인증코드가 없음/만료/불일치/없는 학번인 경우 모두 400 `INVALID_VERIFICATION_CODE`로 동일하게 응답. 5번 틀리면 코드가 폐기되어 다시 발송받아야 함. 재설정 성공 시 기존 로그인(refresh token)은 모두 무효화
@@ -142,7 +142,9 @@
 | 409 | `DUPLICATE_STUDENT_ID` | 이미 가입된 학번 |
 | 409 | `DUPLICATE_NICKNAME` | 이미 사용 중인 닉네임 |
 | 409 | `DUPLICATE_EMAIL` | 이미 사용 중인 이메일 |
+| 404 | `PASSWORD_RESET_ACCOUNT_NOT_FOUND` | 비밀번호 찾기에서 학번·이메일이 일치하는 계정 없음 |
 | 429 | `VERIFICATION_CODE_RESEND_TOO_FAST` | 인증코드 재발송 60초 제한 |
+| 429 | `PASSWORD_RESET_RESEND_LIMIT_EXCEEDED` | 비밀번호 찾기 재발송 하루 5회 초과 |
 | 429 | `LOGIN_LOCKED` | 로그인 5회 실패로 5분 잠금. 남은 시간(초)은 `Retry-After` 헤더 |
 | 503 | `EMAIL_SEND_FAILED` | 메일 발송 실패 |
 | 404 | `PROFESSOR_NOT_FOUND` | 존재하지 않는 교수 |
