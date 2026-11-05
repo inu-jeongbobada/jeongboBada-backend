@@ -15,8 +15,8 @@ Spring Security 필터 체인 구조상 거의 정형화된 패턴을 따른다.
 | 클래스 | 역할 |
 |---|---|
 | `SecurityConfig` | `SecurityFilterChain` 빈. `JwtAuthenticationFilter`/`JwtAuthenticationEntryPoint` 등록 완료. 단, `PERMIT_ALL_PATHS` 외엔 아직 `anyRequest().permitAll()`이라 실제로 `authenticated()`로 막힌 경로는 없음 (아래 "실제 경로 제한은 누가 하나" 참고) |
-| `JwtTokenProvider` | 토큰 발급/파싱/검증 (`jjwt` 사용). `createAccessToken`/`createRefreshToken`/`validateToken`/`getStudentId` 구현 완료 |
-| `JwtAuthenticationFilter` | 구현 완료. 매 요청의 `Authorization` 헤더에서 토큰 추출·검증 후 `SecurityContext`에 `CustomUserDetails` 저장 |
+| `JwtTokenProvider` | 토큰 발급/파싱/검증 (`jjwt` 사용). `createAccessToken`/`createRefreshToken`/`validateToken`/`validateAccessToken`/`getStudentId` 구현 완료. 토큰에 `type` claim(`access`/`refresh`)을 넣어 구분한다. `validateToken`은 서명·만료만, `validateAccessToken`은 종류까지 확인한다 |
+| `JwtAuthenticationFilter` | 구현 완료. 매 요청의 `Authorization` 헤더에서 토큰 추출 후 `validateAccessToken`으로 검증하고 `SecurityContext`에 `CustomUserDetails` 저장. refresh token은 DB 대조 없이 통과하면 로그아웃 뒤에도 쓸 수 있어서 인증하지 않는다 |
 | `CustomUserDetails` | 구현 완료. `UserDetails` 구현체, `userId`/`nickname` 등 도메인 정보 보유 |
 | `StudentUserDetailsService` | (당초 `CustomUserDetailsService`로 계획했으나 실제 클래스명은 이것) `student_id`로 DB에서 `User` 조회 후 `CustomUserDetails`로 변환. 구현 완료 |
 | `JwtAuthenticationEntryPoint` | 구현 완료. 인증 실패 시 로그인 페이지 리다이렉트 대신 401 JSON 응답 (`GlobalErrorCode.AUTHENTICATION_REQUIRED`) |
@@ -31,7 +31,7 @@ Spring Security 필터 체인 구조상 거의 정형화된 패턴을 따른다.
 | `POST /api/auth/signup` | X | 학번/닉네임/이메일 중복 검사 후 BCrypt로 암호화해 저장. 검사와 저장 사이에 같은 값으로 동시 가입(더블클릭 등)이 끼어들면 DB UNIQUE 제약에 걸리고, `GlobalExceptionHandler`가 409(`DUPLICATE_RESOURCE`)로 응답 — 이때는 어느 필드가 겹쳤는지 구분하지 않음 (#109, `ConcurrentSignupIntegrationTest`). **이메일 필수**(비밀번호 찾기용, 대소문자·공백 무시하고 정규화해 저장). **닉네임은 2~6자, 한글·영문·숫자만**(와이어프레임 기준) |
 | `POST /api/auth/login` | X | 학번+비밀번호를 `AuthenticationManager`에 위임해 검증. **와이어프레임 확정으로 미가입 학번(404 `STUDENT_ID_NOT_REGISTERED`)과 비밀번호 틀림(401 `INVALID_CREDENTIALS`, `message`에 n/5회)을 구분한다** (2026-11-03 결정, 회원가입도 이미 가입된 학번을 알려주므로 가입 여부를 숨기는 효과가 크지 않음). 5회 틀리면 5분 잠금(429 `LOGIN_LOCKED`, 남은 초는 `Retry-After` 헤더, 와이어프레임의 10분이 길어서 2026-11-03 변경, 화면 문구 수정 필요)이고, 잠금 중에는 올바른 비밀번호도 거부한다. 성공하면 횟수 초기화. 실패 횟수는 예외가 나도 커밋되도록 `noRollbackFor`, 동시 요청에서도 정확하도록 행 잠금(`findByStudentIdForUpdate`)을 쓴다 (`LoginIntegrationTest`) |
 | `POST /api/auth/reissue` | X (refresh token 자체가 인증 수단) | refresh token 서명·만료 검증 + **DB에 저장된 값과 문자열 일치**해야 통과 (탈취된 구 토큰 재사용 방지). 통과 시 access/refresh 둘 다 새로 발급(회전) |
-| `POST /api/auth/logout` | X (body의 refresh token 또는 헤더의 access token으로 사용자 특정) | DB에 저장된 refresh token을 삭제만 함 — access token 자체를 서버가 강제로 만료시키는 건 아니라서, 이미 발급된 access token은 만료 시각까지는 계속 유효. **body `refreshToken` 권장**: access가 만료돼도 로그아웃된다. 헤더만 보내는 예전 방식은 access가 만료되면 아무것도 못 지운다(#129). DB 저장값과 같은 refresh일 때만 지운다 — 교체된 예전 refresh로 다른 기기의 현재 로그인을 끊지 않기 위해. 둘 다 없으면 400 |
+| `POST /api/auth/logout` | X (body의 refresh token 또는 헤더의 access token으로 사용자 특정) | DB에 저장된 refresh token을 삭제만 함 — access token 자체를 서버가 강제로 만료시키는 건 아니라서, 이미 발급된 access token은 만료 시각까지는 계속 유효. **body `refreshToken` 권장**: access가 만료돼도 로그아웃된다. 헤더만 보내는 예전 방식은 access가 만료되면 아무것도 못 지우고, 헤더의 refresh token은 무시한다(#129). DB 저장값과 같은 refresh일 때만 지운다 — 교체된 예전 refresh로 다른 기기의 현재 로그인을 끊지 않기 위해. 둘 다 없으면 400 |
 | `GET /api/users/me` | O | 본인 정보(`nickname`, `studentId`, `email`, `department`) 조회. 학번·이메일이 들어 있어 **본인 조회 전용 DTO(`MyInfoResponse`)** 로 분리 — 다른 사용자에게 보이는 응답에서 재사용 금지. 경로는 `/api/users/me/**` 규칙에 포함돼 토큰 없으면 401 |
 | `PATCH /api/users/me/nickname` | O | 닉네임 `unique` 제약 때문에 중복 검사하되, **본인 소유 닉네임이면 중복 에러 안 냄**(자기 자신으로의 "변경"은 통과). 형식은 가입과 같은 2~6자, 한글·영문·숫자. 이 규칙 전에 만든 긴 닉네임은 그대로 유지되고, 바꿀 때만 새 규칙을 적용한다 |
 | `PATCH /api/users/me/password` | O | **현재 비밀번호(`currentPassword`) 확인 필수** — 세션(access token) 탈취 상태에서 공격자가 비밀번호만 바꿔버리는 것 방지. 현재 비밀번호가 틀리면 **400**(`CURRENT_PASSWORD_MISMATCH`) — 401이면 프론트 인터셉터가 토큰 재발급으로 오인함(#115). 성공 시 **기존 refresh token 무효화**(`clearRefreshToken()`) → 다른 기기/세션은 재로그인 필요 |

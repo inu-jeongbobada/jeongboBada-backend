@@ -37,10 +37,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
         String token = resolveToken(request);
 
-        // 토큰이 있고, 서명/만료가 유효할 때만 인증 처리. 없거나 무효하면 그냥 통과시킴
+        // 토큰이 있고, 서명/만료가 유효한 access token일 때만 인증 처리. 없거나 무효하면 그냥 통과시킴
         // (여기서 401을 던지지 않음 — permitAll 경로는 토큰 없이도 통과해야 하고,
         //  "인증 안 됐는데 인증 필요한 경로 접근"에 대한 401 응답은 JwtAuthenticationEntryPoint가 담당)
-        if (token != null && jwtTokenProvider.validateToken(token)) {
+        if (token != null && jwtTokenProvider.validateAccessToken(token)) {
             String studentId = jwtTokenProvider.getStudentId(token);
             try {
                 UserDetails userDetails = studentUserDetailsService.loadUserByUsername(studentId);

@@ -146,7 +146,7 @@ public class AuthService {
             revokeByRefreshToken(refreshToken);
             return;
         }
-        if (accessToken == null || !jwtTokenProvider.validateToken(accessToken)) {
+        if (accessToken == null || !jwtTokenProvider.validateAccessToken(accessToken)) {
             return; // 만료·무효한 access token이면 사용자를 특정할 수 없어 조용히 종료 (refresh 방식을 권장하는 이유)
         }
         String studentId = jwtTokenProvider.getStudentId(accessToken);
