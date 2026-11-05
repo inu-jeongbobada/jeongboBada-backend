@@ -15,8 +15,8 @@ Spring Security 필터 체인 구조상 거의 정형화된 패턴을 따른다.
 | 클래스 | 역할 |
 |---|---|
 | `SecurityConfig` | `SecurityFilterChain` 빈. `JwtAuthenticationFilter`/`JwtAuthenticationEntryPoint` 등록 완료. 단, `PERMIT_ALL_PATHS` 외엔 아직 `anyRequest().permitAll()`이라 실제로 `authenticated()`로 막힌 경로는 없음 (아래 "실제 경로 제한은 누가 하나" 참고) |
-| `JwtTokenProvider` | 토큰 발급/파싱/검증 (`jjwt` 사용). `createAccessToken`/`createRefreshToken`/`validateToken`/`validateAccessToken`/`getStudentId` 구현 완료. 토큰에 `type` claim(`access`/`refresh`)을 넣어 구분한다. `validateToken`은 서명·만료만, `validateAccessToken`은 종류까지 확인한다 |
-| `JwtAuthenticationFilter` | 구현 완료. 매 요청의 `Authorization` 헤더에서 토큰 추출 후 `validateAccessToken`으로 검증하고 `SecurityContext`에 `CustomUserDetails` 저장. refresh token은 DB 대조 없이 통과하면 로그아웃 뒤에도 쓸 수 있어서 인증하지 않는다 |
+| `JwtTokenProvider` | 토큰 발급/파싱/검증 (`jjwt` 사용). `createAccessToken`/`createRefreshToken`/`resolveStudentId`/`resolveAccessTokenStudentId` 구현 완료. 토큰에 `type` claim(`access`/`refresh`)을 넣어 구분한다. `resolveStudentId`는 서명·만료만, `resolveAccessTokenStudentId`는 종류까지 확인한다. 검증과 학번 추출을 한 번의 파싱으로 처리해서, 유효하지 않으면 예외 대신 빈 `Optional`을 돌려준다 |
+| `JwtAuthenticationFilter` | 구현 완료. 매 요청의 `Authorization` 헤더에서 토큰 추출 후 `resolveAccessTokenStudentId`로 검증하고 `SecurityContext`에 `CustomUserDetails` 저장. refresh token은 DB 대조 없이 통과하면 로그아웃 뒤에도 쓸 수 있어서 인증하지 않는다 |
 | `CustomUserDetails` | 구현 완료. `UserDetails` 구현체, `userId`/`nickname` 등 도메인 정보 보유 |
 | `StudentUserDetailsService` | (당초 `CustomUserDetailsService`로 계획했으나 실제 클래스명은 이것) `student_id`로 DB에서 `User` 조회 후 `CustomUserDetails`로 변환. 구현 완료 |
 | `JwtAuthenticationEntryPoint` | 구현 완료. 인증 실패 시 로그인 페이지 리다이렉트 대신 401 JSON 응답 (`GlobalErrorCode.AUTHENTICATION_REQUIRED`) |

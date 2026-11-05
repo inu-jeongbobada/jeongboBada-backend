@@ -12,6 +12,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
+import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -69,7 +71,7 @@ class JwtAuthenticationFilterTest {
         request.addHeader("Authorization", "Bearer invalid-token");
         MockHttpServletResponse response = new MockHttpServletResponse();
         FilterChain filterChain = mock(FilterChain.class);
-        when(jwtTokenProvider.validateAccessToken("invalid-token")).thenReturn(false);
+        when(jwtTokenProvider.resolveAccessTokenStudentId("invalid-token")).thenReturn(Optional.empty());
 
         // when
         filter.doFilterInternal(request, response, filterChain);
@@ -88,8 +90,7 @@ class JwtAuthenticationFilterTest {
         FilterChain filterChain = mock(FilterChain.class);
 
         UserDetails userDetails = mock(CustomUserDetails.class);
-        when(jwtTokenProvider.validateAccessToken("valid-token")).thenReturn(true);
-        when(jwtTokenProvider.getStudentId("valid-token")).thenReturn("202012345");
+        when(jwtTokenProvider.resolveAccessTokenStudentId("valid-token")).thenReturn(Optional.of("202012345"));
         when(studentUserDetailsService.loadUserByUsername("202012345")).thenReturn(userDetails);
 
         // when
@@ -111,8 +112,7 @@ class JwtAuthenticationFilterTest {
         MockHttpServletResponse response = new MockHttpServletResponse();
         FilterChain filterChain = mock(FilterChain.class);
 
-        when(jwtTokenProvider.validateAccessToken("deleted-user-token")).thenReturn(true);
-        when(jwtTokenProvider.getStudentId("deleted-user-token")).thenReturn("202012345");
+        when(jwtTokenProvider.resolveAccessTokenStudentId("deleted-user-token")).thenReturn(Optional.of("202012345"));
         when(studentUserDetailsService.loadUserByUsername("202012345"))
             .thenThrow(new UsernameNotFoundException("존재하지 않는 학번입니다"));
 

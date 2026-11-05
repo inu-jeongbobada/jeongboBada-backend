@@ -121,12 +121,8 @@ public class AuthService {
     public TokenResponse reissue(ReissueRequest request) {
         String refreshToken = request.refreshToken();
 
-        if (!jwtTokenProvider.validateToken(refreshToken)) {
-            throw new BusinessException(UserErrorCode.INVALID_REFRESH_TOKEN);
-        }
-
-        String studentId = jwtTokenProvider.getStudentId(refreshToken);
-        User user = userRepository.findByStudentId(studentId)
+        User user = jwtTokenProvider.resolveStudentId(refreshToken)
+            .flatMap(userRepository::findByStudentId)
             .orElseThrow(() -> new BusinessException(UserErrorCode.INVALID_REFRESH_TOKEN));
 
         // DB에 저장된 값과 일치하는지, 만료 안 됐는지 확인
@@ -146,11 +142,12 @@ public class AuthService {
             revokeByRefreshToken(refreshToken);
             return;
         }
-        if (accessToken == null || !jwtTokenProvider.validateAccessToken(accessToken)) {
-            return; // 만료·무효한 access token이면 사용자를 특정할 수 없어 조용히 종료 (refresh 방식을 권장하는 이유)
+        if (accessToken == null) {
+            return;
         }
-        String studentId = jwtTokenProvider.getStudentId(accessToken);
-        userRepository.findByStudentId(studentId)
+        // 만료·무효한 access token이면 사용자를 특정할 수 없어 조용히 종료 (refresh 방식을 권장하는 이유)
+        jwtTokenProvider.resolveAccessTokenStudentId(accessToken)
+            .flatMap(userRepository::findByStudentId)
             .ifPresent(User::clearRefreshToken);
     }
 
@@ -158,11 +155,9 @@ public class AuthService {
     // DB에 저장된 값과 같을 때만 지운다 — 이미 교체된 예전 refresh로 요청하면, 그 사이 새로 로그인한
     // 다른 기기의 현재 refresh까지 지워버리는 일을 막기 위해서다.
     private void revokeByRefreshToken(String refreshToken) {
-        if (!jwtTokenProvider.validateToken(refreshToken)) {
-            return; // 만료·위조된 refresh는 어차피 재발급에 쓸 수 없다
-        }
-        String studentId = jwtTokenProvider.getStudentId(refreshToken);
-        userRepository.findByStudentId(studentId)
+        // 만료·위조된 refresh는 어차피 재발급에 쓸 수 없어 조용히 종료
+        jwtTokenProvider.resolveStudentId(refreshToken)
+            .flatMap(userRepository::findByStudentId)
             .filter(user -> refreshToken.equals(user.getRefreshToken()))
             .ifPresent(User::clearRefreshToken);
     }
