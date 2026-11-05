@@ -69,7 +69,7 @@ class JwtAuthenticationFilterTest {
         request.addHeader("Authorization", "Bearer invalid-token");
         MockHttpServletResponse response = new MockHttpServletResponse();
         FilterChain filterChain = mock(FilterChain.class);
-        when(jwtTokenProvider.validateToken("invalid-token")).thenReturn(false);
+        when(jwtTokenProvider.validateAccessToken("invalid-token")).thenReturn(false);
 
         // when
         filter.doFilterInternal(request, response, filterChain);
@@ -88,7 +88,7 @@ class JwtAuthenticationFilterTest {
         FilterChain filterChain = mock(FilterChain.class);
 
         UserDetails userDetails = mock(CustomUserDetails.class);
-        when(jwtTokenProvider.validateToken("valid-token")).thenReturn(true);
+        when(jwtTokenProvider.validateAccessToken("valid-token")).thenReturn(true);
         when(jwtTokenProvider.getStudentId("valid-token")).thenReturn("202012345");
         when(studentUserDetailsService.loadUserByUsername("202012345")).thenReturn(userDetails);
 
@@ -111,7 +111,7 @@ class JwtAuthenticationFilterTest {
         MockHttpServletResponse response = new MockHttpServletResponse();
         FilterChain filterChain = mock(FilterChain.class);
 
-        when(jwtTokenProvider.validateToken("deleted-user-token")).thenReturn(true);
+        when(jwtTokenProvider.validateAccessToken("deleted-user-token")).thenReturn(true);
         when(jwtTokenProvider.getStudentId("deleted-user-token")).thenReturn("202012345");
         when(studentUserDetailsService.loadUserByUsername("202012345"))
             .thenThrow(new UsernameNotFoundException("존재하지 않는 학번입니다"));

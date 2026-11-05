@@ -17,6 +17,7 @@ import org.springframework.test.web.servlet.ResultActions;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ThreadLocalRandom;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -98,6 +99,52 @@ class LogoutIntegrationTest {
     }
 
     @Test
+    void access_token으로는_보호된_API를_호출할_수_있다() throws Exception {
+        JsonNode tokens = login();
+
+        getMyInfo(tokens.path("accessToken").asText())
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    void 로그아웃한_refresh_token을_Bearer로_보내면_보호된_API가_401이다() throws Exception {
+        JsonNode tokens = login();
+        logout(tokens.path("refreshToken").asText(), null)
+            .andExpect(status().isOk());
+
+        getMyInfo(tokens.path("refreshToken").asText())
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void 로그인_중인_refresh_token도_Bearer로_보내면_보호된_API가_401이다() throws Exception {
+        JsonNode tokens = login();
+
+        getMyInfo(tokens.path("refreshToken").asText())
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void refresh_token을_Authorization_헤더로_보내_로그아웃해도_현재_refresh는_지워지지_않는다() throws Exception {
+        JsonNode tokens = login();
+
+        logout(null, tokens.path("refreshToken").asText())
+            .andExpect(status().isOk());
+
+        reissue(tokens.path("refreshToken").asText())
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    void access_token으로는_재발급할_수_없다() throws Exception {
+        JsonNode tokens = login();
+
+        reissue(tokens.path("accessToken").asText())
+            .andExpect(status().isUnauthorized())
+            .andExpect(jsonPath("$.code").value("INVALID_REFRESH_TOKEN"));
+    }
+
+    @Test
     void refresh_token도_헤더도_없으면_400() throws Exception {
         mockMvc.perform(post("/api/auth/logout"))
             .andExpect(status().isBadRequest())
@@ -126,6 +173,11 @@ class LogoutIntegrationTest {
                     """.formatted(refreshToken));
         }
         return mockMvc.perform(request);
+    }
+
+    private ResultActions getMyInfo(String bearerToken) throws Exception {
+        return mockMvc.perform(get("/api/users/me")
+            .header("Authorization", "Bearer " + bearerToken));
     }
 
     private ResultActions reissue(String refreshToken) throws Exception {

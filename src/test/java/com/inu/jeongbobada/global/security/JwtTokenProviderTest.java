@@ -42,6 +42,27 @@ class JwtTokenProviderTest {
     }
 
     @Test
+    void access_token만_access_token_검증을_통과한다() {
+        // given
+        JwtTokenProvider provider = tokenProvider(60_000L, 120_000L);
+
+        // when & then
+        assertThat(provider.validateAccessToken(provider.createAccessToken("202012345"))).isTrue();
+        assertThat(provider.validateAccessToken(provider.createRefreshToken("202012345"))).isFalse();
+    }
+
+    @Test
+    void 만료되거나_형식이_깨진_토큰은_access_token_검증에_실패한다() {
+        // given
+        JwtTokenProvider expiredProvider = tokenProvider(-1_000L, -1_000L);
+        JwtTokenProvider provider = tokenProvider(60_000L, 120_000L);
+
+        // when & then
+        assertThat(provider.validateAccessToken(expiredProvider.createAccessToken("202012345"))).isFalse();
+        assertThat(provider.validateAccessToken("이건-토큰이-아님")).isFalse();
+    }
+
+    @Test
     void 만료된_토큰은_검증에_실패한다() {
         // given: 만료시간을 음수로 줘서 발급 즉시 만료된 토큰을 만든다
         JwtTokenProvider provider = tokenProvider(-1_000L, -1_000L);
