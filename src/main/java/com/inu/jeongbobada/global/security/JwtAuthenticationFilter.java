@@ -40,30 +40,33 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // 토큰이 있고, 서명/만료가 유효한 access token일 때만 인증 처리. 없거나 무효하면 그냥 통과시킴
         // (여기서 401을 던지지 않음 — permitAll 경로는 토큰 없이도 통과해야 하고,
         //  "인증 안 됐는데 인증 필요한 경로 접근"에 대한 401 응답은 JwtAuthenticationEntryPoint가 담당)
-        if (token != null && jwtTokenProvider.validateAccessToken(token)) {
-            String studentId = jwtTokenProvider.getStudentId(token);
-            try {
-                UserDetails userDetails = studentUserDetailsService.loadUserByUsername(studentId);
-
-                // "이 사람이 인증됐다"를 표현하는 Spring Security 기본 객체.
-                // 비밀번호 자리에 null을 넣는 이유: 이미 JWT 서명으로 검증이 끝났으니
-                // 비밀번호를 다시 대조할 필요가 없어서.
-                UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-
-                // 여기 저장해야 SecurityConfig의 authenticated() 체크, @AuthenticationPrincipal 둘 다 동작함
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-            } catch (UsernameNotFoundException e) {
-                // 서명·만료는 유효하지만 그 사이 DB에서 사용자가 삭제된 토큰 (#110).
-                // 이 필터는 ExceptionTranslationFilter보다 앞에 있어서 예외를 던지면 EntryPoint(401)로 가지 못하고
-                // 공개 API까지 500이 된다. 무효 토큰과 똑같이 "인증 없음"으로 통과시키면
-                // 공개 API는 그대로 200, 보호 API는 EntryPoint가 401을 준다.
-                log.warn("토큰의 사용자가 존재하지 않아 인증 없이 통과: {}", e.getMessage());
-            }
+        if (token != null) {
+            jwtTokenProvider.resolveAccessTokenStudentId(token).ifPresent(this::authenticate);
         }
 
         // 인증 성공/실패와 무관하게 항상 호출 — 안 하면 요청이 다음 단계로 안 넘어가고 멈춤
         filterChain.doFilter(request, response);
+    }
+
+    private void authenticate(String studentId) {
+        try {
+            UserDetails userDetails = studentUserDetailsService.loadUserByUsername(studentId);
+
+            // "이 사람이 인증됐다"를 표현하는 Spring Security 기본 객체.
+            // 비밀번호 자리에 null을 넣는 이유: 이미 JWT 서명으로 검증이 끝났으니
+            // 비밀번호를 다시 대조할 필요가 없어서.
+            UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
+            // 여기 저장해야 SecurityConfig의 authenticated() 체크, @AuthenticationPrincipal 둘 다 동작함
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+        } catch (UsernameNotFoundException e) {
+            // 서명·만료는 유효하지만 그 사이 DB에서 사용자가 삭제된 토큰 (#110).
+            // 이 필터는 ExceptionTranslationFilter보다 앞에 있어서 예외를 던지면 EntryPoint(401)로 가지 못하고
+            // 공개 API까지 500이 된다. 무효 토큰과 똑같이 "인증 없음"으로 통과시키면
+            // 공개 API는 그대로 200, 보호 API는 EntryPoint가 401을 준다.
+            log.warn("토큰의 사용자가 존재하지 않아 인증 없이 통과: {}", e.getMessage());
+        }
     }
 
     // "Authorization: Bearer xxx.yyy.zzz" 헤더에서 접두사를 떼고 순수 토큰 문자열만 추출

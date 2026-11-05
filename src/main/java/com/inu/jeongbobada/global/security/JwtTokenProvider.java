@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -47,43 +48,31 @@ public class JwtTokenProvider {
             .compact();
     }
 
-    //아래 두 메서드는 사실상 세트이다?
-    // 1. 정상토큰인지 확인
-    // 2. 학번 추출
-    // 서명/만료 검증. 위/변조되었거나 만료된 토큰이면 false
-    public boolean validateToken(String token) {
-        try {
-            Jwts.parser().verifyWith(getSigningKey()).build().parseSignedClaims(token);
-            return true;
-        } catch (JwtException | IllegalArgumentException e) {
-            return false;
-        }
+    // 서명/만료가 유효한 토큰의 학번. 위/변조되었거나 만료된 토큰이면 빈 값.
+    // refresh token은 호출하는 쪽이 DB 저장값과 대조해야 한다.
+    public Optional<String> resolveStudentId(String token) {
+        return parseClaims(token).map(Claims::getSubject);
     }
 
     // 서명/만료에 더해 access token인지까지 확인한다. refresh token은 DB 대조 없이 통과하면
     // 로그아웃·비밀번호 변경으로 지워진 뒤에도 만료 전까지 API를 호출할 수 있기 때문이다.
-    public boolean validateAccessToken(String token) {
+    public Optional<String> resolveAccessTokenStudentId(String token) {
+        return parseClaims(token)
+            .filter(claims -> ACCESS_TOKEN_TYPE.equals(claims.get(TOKEN_TYPE_CLAIM)))
+            .map(Claims::getSubject);
+    }
+
+    // 검증과 학번 추출을 한 번의 파싱으로 처리한다. 나눠서 두 번 파싱하면 그 사이에 토큰이 만료될 때
+    // 검증을 통과한 뒤 예외가 나서 500이 된다.
+    private Optional<Claims> parseClaims(String token) {
         try {
-            Claims claims = Jwts.parser()
+            return Optional.of(Jwts.parser()
                 .verifyWith(getSigningKey())
                 .build()
                 .parseSignedClaims(token)
-                .getPayload();
-            return ACCESS_TOKEN_TYPE.equals(claims.get(TOKEN_TYPE_CLAIM, String.class));
+                .getPayload());
         } catch (JwtException | IllegalArgumentException e) {
-            return false;
+            return Optional.empty();
         }
     }
-
-    //쉽게 말하면 토큰의 주인을 찾는 메서드?
-    public String getStudentId(String token) {
-        Claims claims = Jwts.parser()
-            .verifyWith(getSigningKey())
-            .build()
-            .parseSignedClaims(token)
-            .getPayload();
-        return claims.getSubject();
-    }
-
-
 }
