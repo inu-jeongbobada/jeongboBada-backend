@@ -54,7 +54,8 @@ public class Professor {
         String professorDetail,
         String professorImageUrl,
         String professorRoom,
-        String professorCall
+        String professorCall,
+        String professorEmail
     ) {
         this.professorId = professorId;
         this.professorName = professorName;
@@ -62,5 +63,6 @@ public class Professor {
         this.professorImageUrl = professorImageUrl;
         this.professorRoom = professorRoom;
         this.professorCall = professorCall;
+        this.professorEmail = professorEmail;
     }
 }
