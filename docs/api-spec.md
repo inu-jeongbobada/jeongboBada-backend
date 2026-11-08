@@ -160,9 +160,12 @@
 | 404 | `COURSE_OFFERING_NOT_FOUND` | 해당 교수가 개설한 과목이 아님 |
 | 409 | `DUPLICATE_COURSE_REVIEW` | 같은 과목+교수에 이미 강의평을 작성함 (동시 요청이 사전 확인을 통과하면 `DUPLICATE_RESOURCE`) |
 | 404 | `COURSE_REVIEW_NOT_FOUND` | 존재하지 않거나 URL의 과목과 일치하지 않는 강의평 |
-| 404 | `PROFESSOR_COMMENT_NOT_FOUND` | 존재하지 않는 교수 후기 |
-| 403 | `PROFESSOR_COMMENT_FORBIDDEN` | 본인이 쓴 교수 후기가 아님 |
-| 404 | `PROFESSOR_COMMENT_PROFESSOR_MISMATCH` | URL의 교수와 후기의 교수가 다름 (작성자 확인이 먼저라 남의 후기면 403이 먼저 나감) |
+
+[//]: # (| 404 | `PROFESSOR_COMMENT_NOT_FOUND` | 존재하지 않는 교수 후기 |)
+
+[//]: # (| 403 | `PROFESSOR_COMMENT_FORBIDDEN` | 본인이 쓴 교수 후기가 아님 |)
+
+[//]: # (| 404 | `PROFESSOR_COMMENT_PROFESSOR_MISMATCH` | URL의 교수와 후기의 교수가 다름 &#40;작성자 확인이 먼저라 남의 후기면 403이 먼저 나감&#41; |)
 
 ## 작성 규칙
 - 엔드포인트 구현 시 "상태"를 "구현완료"로 바꾸고 요청/응답 예시를 아래에 추가한다.
