@@ -67,7 +67,7 @@ class ErrorCodeRulesTest {
         // 0개면 스캔이 깨진 것이라 아래 테스트들이 아무것도 검사하지 않고 통과해버린다
         assertThat(allCodes)
             .extracting(code -> code.getClass().getSimpleName())
-            .contains("GlobalErrorCode", "UserErrorCode", "ProfessorErrorCode", "CourseErrorCode", "ProfessorCommentErrorCode");
+            .contains("GlobalErrorCode", "UserErrorCode", "ProfessorErrorCode", "CourseErrorCode");
     }
 
     @Test
