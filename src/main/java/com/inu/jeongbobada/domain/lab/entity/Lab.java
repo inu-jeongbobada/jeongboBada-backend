@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Getter
@@ -29,10 +31,21 @@ public class Lab {
     @Column(name = "LAB_URL")
     private String labUrl;
 
-    public Lab(Professor professor, String labName, String labDetail, String labUrl) {
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "LAB_STUDY", columnDefinition = "json")
+    private String [] labStudy = new String[10];
+
+    public Lab(
+        Professor professor,
+        String labName,
+        String labDetail,
+        String labUrl,
+        String [] labStudy
+    ) {
         this.professor = professor;
         this.labName = labName;
         this.labDetail = labDetail;
         this.labUrl = labUrl;
+        this.labStudy = labStudy;
     }
 }
