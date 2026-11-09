@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -21,6 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 // #96: 내 정보 조회. 로그인한 본인 정보(학번·이메일 포함)를 돌려주고, 토큰이 없으면 401이어야 한다.
+// #165: 프론트가 관리자 화면을 열지 판단하도록 role도 내려준다.
 @SpringBootTest
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
@@ -31,6 +33,9 @@ class MyInfoIntegrationTest {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -65,7 +70,19 @@ class MyInfoIntegrationTest {
             .andExpect(jsonPath("$.data.nickname").value(nickname))
             .andExpect(jsonPath("$.data.studentId").value(studentId))
             .andExpect(jsonPath("$.data.email").value(email))
-            .andExpect(jsonPath("$.data.department").isEmpty());
+            .andExpect(jsonPath("$.data.department").isEmpty())
+            .andExpect(jsonPath("$.data.role").value("USER"));
+    }
+
+    // 관리자 승격은 문서(auth-architecture.md)에 적은 SQL 그대로 한다. 권한은 로그인할 때 읽으므로 승격 뒤에 로그인한다
+    @Test
+    void DB에서_관리자로_승격한_사용자는_role이_ADMIN이다() throws Exception {
+        jdbcTemplate.update("update users set role = 'ADMIN' where student_id = ?", studentId);
+
+        mockMvc.perform(get("/api/users/me")
+                .header("Authorization", "Bearer " + login()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.role").value("ADMIN"));
     }
 
     @Test

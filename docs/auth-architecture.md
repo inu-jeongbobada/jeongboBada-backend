@@ -137,6 +137,15 @@ Figma 화면 기준으로 "로그인 없이 보이는 화면(첫 페이지 등)"
 
 - [x] 내 정보 조회 API — `GET /api/users/me` ([이슈 #96](https://github.com/inu-jeongbobada/jeongboBada-backend/issues/96)).
       지금 있는 필드(`nickname`, `studentId`, `email`, `department`)만 제공. 통합 테스트 `MyInfoIntegrationTest`
+- [x] `/me` 응답에 `role`(`USER`/`ADMIN`) 추가 ([이슈 #165](https://github.com/inu-jeongbobada/jeongboBada-backend/issues/165)).
+      프론트가 관리자 화면(라우트 가드, 헤더 버튼)을 보여줄지 정하는 용도이고, 실제 권한은 관리자 API의 `hasRole('ADMIN')`이 막는다
+- **관리자 계정 만들기:** 관리자 가입 API나 `data.sql` 시드는 두지 않는다 (비밀번호가 레포에 남고, 몰래 관리자가 될 경로가 생긴다).
+  평소처럼 회원가입한 뒤 DB에서 승격하고, 다시 로그인하면 된다 (권한은 로그인할 때 읽는다).
+  ```sql
+  update users set role = 'ADMIN' where student_id = '학번';
+  ```
+  - 테이블·컬럼 이름은 소문자로 쓴다. 엔티티에는 `USERS`로 적혀 있지만 실제 테이블은 `users`이고, Linux의 MySQL(Docker·운영)은 대소문자를 구분해서 `USERS`로 쓰면 테이블이 없다고 나온다
+  - [ ] 가입 승인 기능이 생기면 위 SQL에 승인 상태 변경도 추가해야 한다 (관리자 본인 계정이 승인 대기에 걸리지 않게)
 - [ ] 마이페이지 프로필 필드(이름·학년·부전공·학과 입력, 프로필 사진) — 디자인·프론트 확정 대기. 사진은 공용 파일 업로드(S3, #98) 이후
 
 ### 7. 비밀번호 찾기 (이메일 인증, 3순위) — [이슈 #87](https://github.com/inu-jeongbobada/jeongboBada-backend/issues/87)
