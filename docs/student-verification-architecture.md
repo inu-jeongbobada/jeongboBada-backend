@@ -35,7 +35,7 @@
 ### 1. S3 연동
 공용 업로드 컴포넌트로 구현했고, 자세한 내용과 진행 상태는 [file-upload-architecture.md](file-upload-architecture.md)에 적는다.
 - [x] AWS SDK 의존성 추가
-- [ ] S3 버킷 생성 및 권한 설정 (Learner Lab 개설 후)
+- [x] S3 버킷 생성 및 권한 설정 (Learner Lab에서 확인, [file-upload-architecture.md](file-upload-architecture.md) 3단계)
 - [x] S3 설정 키 추가 (`aws.region`, `aws.s3.bucket`. 액세스 키는 설정 파일이 아니라 환경변수로 받는다)
 - [x] 파일 업로드/삭제/presigned URL 컴포넌트 (`global/file/FileStorage`)
 
@@ -47,5 +47,5 @@
 - [ ] 미인증/거절 상태 유저의 로그인 정책 반영
 
 # 예상 브랜치
-- feat/s3-integration
+- feat/s3-upload (공용 업로드 컴포넌트, #169 머지됨)
 - feat/student-verification
