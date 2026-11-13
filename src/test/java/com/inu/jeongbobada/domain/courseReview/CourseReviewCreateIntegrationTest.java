@@ -120,7 +120,7 @@ class CourseReviewCreateIntegrationTest {
             .andExpect(status().isCreated());
 
         course = courseRepository.save(new Course("테스트과목", "T" + n, "테스트 과목 설명"));
-        professor = professorRepository.save(new Professor(null, "테스트교수", "테스트 교수 설명", null));
+        professor = professorRepository.save(new Professor(null, "테스트교수", "테스트 교수 설명", null, "200", "032-000-0000", "email@inu.ac.kr"));
         offering = courseOfferingRepository.save(new CourseOffering(
             course, professor, 2026, Semester.FIRST, Grade.SECOND, Credits.THIRD,
             "월 1,2", CourseType.MAJOR_CORE, EvaluationType.RELATIVE, IsOnline.OFFLINE));

@@ -74,6 +74,9 @@ erDiagram
         varchar PROFESSOR_NAME
         text PROFESSOR_DETAIL
         varchar PROFESSOR_IMAGE_URL
+        varchar PROFESSOR_ROOM
+        varchar PROFESSOR_CALL
+        varchar PROFESSOR_EMAIL
     }
     LAB {
         bigint LAB_ID PK
@@ -81,14 +84,7 @@ erDiagram
         varchar LAB_NAME
         text LAB_DETAIL
         varchar LAB_URL
-    }
-    PROFESSOR_COMMENT {
-        bigint PROFESSOR_COMMENT_ID PK
-        bigint PROFESSOR_ID FK
-        bigint USER_ID FK
-        text PROFESSOR_COMMENT_DETAIL
-        int PROFESSOR_COMMENT_RATE
-        enum PROFESSOR_COMMENT_ANONYMITY
+        JSON LAB_STUDY
     }
     COURSE {
         bigint COURSE_ID PK
@@ -132,8 +128,6 @@ erDiagram
 | 자식 (FK 보유) | FK 컬럼 | 부모 | 관계 | 삭제 정책 |
 |---|---|---|---|---|
 | `LAB` | `PROFESSOR_ID` (UNIQUE) | `PROFESSOR` | 1 : 0..1 | 명시 없음 (NO ACTION) |
-| `PROFESSOR_COMMENT` | `PROFESSOR_ID` | `PROFESSOR` | 1 : N | 명시 없음 (NO ACTION) |
-| `PROFESSOR_COMMENT` | `USER_ID` | `USERS` | 1 : N | 명시 없음 (NO ACTION) |
 | `COURSE_OFFERING` | `COURSE_ID` | `COURSE` | 1 : N | 명시 없음 (NO ACTION) |
 | `COURSE_OFFERING` | `PROFESSOR_ID` | `PROFESSOR` | 1 : N | 명시 없음 (NO ACTION) |
 | `COURSE_REVIEW` | `USER_ID` | `USERS` | 1 : N | 명시 없음 (NO ACTION) |
@@ -142,7 +136,11 @@ erDiagram
 | `MATERIAL` | `USER_ID` | `USERS` | 1 : N | 명시 없음 (NO ACTION) |
 | `MATERIAL` | `COURSE_ID` | `COURSE` | 1 : N | 명시 없음 (NO ACTION) |
 
-- 연관관계는 전부 `@ManyToOne`/`@OneToOne`, `fetch = LAZY`. `PROFESSOR`의 `lab`/`professorComments`/`courseOfferings`는 `mappedBy`(FK 없는 쪽)
+[//]: # (| `PROFESSOR_COMMENT` | `PROFESSOR_ID` | `PROFESSOR` | 1 : N | 명시 없음 &#40;NO ACTION&#41; |)
+
+[//]: # (| `PROFESSOR_COMMENT` | `USER_ID` | `USERS` | 1 : N | 명시 없음 &#40;NO ACTION&#41; |)
+
+- 연관관계는 전부 `@ManyToOne`/`@OneToOne`, `fetch = LAZY`. `PROFESSOR`의 `lab`/`courseOfferings`는 `mappedBy`(FK 없는 쪽)
 - `COURSE_REVIEW`는 `COURSE_OFFERING`이 아니라 **`COURSE` + `PROFESSOR`를 직접 참조**한다. 학기마다 `COURSE_OFFERING` 행이 갱신돼도
   후기가 `courseId + professorId`로 계속 살아있게 하기 위함
 - **삭제 정책은 아직 미정** — 후기가 달린 교수/과목을 삭제하면 FK 오류가 난다 (교수 삭제 시 교수 후기를 먼저 지울지 등 팀 논의 필요)
@@ -195,36 +193,50 @@ erDiagram
 
 ### PROFESSOR (professor)
 
-| 컬럼 | 타입 | 제약 | 설명 |
-|---|---|---|---|
-| `PROFESSOR_ID` | BIGINT | PK, AI | |
-| `PROFESSOR_NAME` | VARCHAR(20) | NN | |
-| `PROFESSOR_DETAIL` | TEXT | NN | |
-| `PROFESSOR_IMAGE_URL` | VARCHAR(255) | | 사진 데이터가 아직 없어 null 허용 (없으면 프론트에서 기본 이미지) |
+| 컬럼                    | 타입           | 제약     | 설명                                       |
+|-----------------------|--------------|--------|------------------------------------------|
+| `PROFESSOR_ID`        | BIGINT       | PK, AI |                                          |
+| `PROFESSOR_NAME`      | VARCHAR(20)  | NN     |                                          |
+| `PROFESSOR_DETAIL`    | TEXT         | NN     |                                          |
+| `PROFESSOR_IMAGE_URL` | VARCHAR(255) |        | 사진 데이터가 아직 없어 null 허용 (없으면 프론트에서 기본 이미지) |
+| `PROFESSOR_ROOM`      | VARCHAR(20)  |        |                                          |
+| `PROFESSOR_CALL`      | VARCHAR(20)  |        |                                          |
+| `PROFESSOR_EMAIL`     | VARCHAR(20)  |        |                                          |
 
 ### LAB (lab)
 
-| 컬럼 | 타입 | 제약 | 설명 |
-|---|---|---|---|
-| `LAB_ID` | BIGINT | PK, AI | |
-| `PROFESSOR_ID` | BIGINT | FK, NN, UK | 교수와 1:1 |
-| `LAB_NAME` | VARCHAR(100) | | |
-| `LAB_DETAIL` | TEXT | | |
-| `LAB_URL` | VARCHAR(255) | | |
+| 컬럼             | 타입           | 제약         | 설명      |
+|----------------|--------------|------------|---------|
+| `LAB_ID`       | BIGINT       | PK, AI     |         |
+| `PROFESSOR_ID` | BIGINT       | FK, NN, UK | 교수와 1:1 |
+| `LAB_NAME`     | VARCHAR(100) |            |         |
+| `LAB_DETAIL`   | TEXT         |            |         |
+| `LAB_URL`      | VARCHAR(255) |            |         |
+| `LAB_STUDY`    | JSON         |            |         |
 
-### PROFESSOR_COMMENT (professorComment)
+[//]: # (### PROFESSOR_COMMENT &#40;professorComment&#41;)
 
-| 컬럼 | 타입 | 제약 | 설명 |
-|---|---|---|---|
-| `PROFESSOR_COMMENT_ID` | BIGINT | PK, AI | |
-| `PROFESSOR_ID` | BIGINT | FK, NN | |
-| `USER_ID` | BIGINT | FK, NN | 작성자 |
-| `PROFESSOR_COMMENT_DETAIL` | TEXT | NN | |
-| `PROFESSOR_COMMENT_RATE` | INT | NN | 평점 |
-| `PROFESSOR_COMMENT_DATE` | DATETIME | NN | 작성 시각 (자동) |
-| `PROFESSOR_COMMENT_ANONYMITY` | ENUM | NN | `TRUE` / `FALSE` |
+[//]: # ()
+[//]: # (| 컬럼 | 타입 | 제약 | 설명 |)
 
-DB UNIQUE 제약은 없다. 한 사용자가 같은 교수에게 후기를 여러 개 남길 수 있는지는 DB가 아니라 서비스 로직에서 정한다.
+[//]: # (|---|---|---|---|)
+
+[//]: # (| `PROFESSOR_COMMENT_ID` | BIGINT | PK, AI | |)
+
+[//]: # (| `PROFESSOR_ID` | BIGINT | FK, NN | |)
+
+[//]: # (| `USER_ID` | BIGINT | FK, NN | 작성자 |)
+
+[//]: # (| `PROFESSOR_COMMENT_DETAIL` | TEXT | NN | |)
+
+[//]: # (| `PROFESSOR_COMMENT_RATE` | INT | NN | 평점 |)
+
+[//]: # (| `PROFESSOR_COMMENT_DATE` | DATETIME | NN | 작성 시각 &#40;자동&#41; |)
+
+[//]: # (| `PROFESSOR_COMMENT_ANONYMITY` | ENUM | NN | `TRUE` / `FALSE` |)
+
+[//]: # ()
+[//]: # (DB UNIQUE 제약은 없다. 한 사용자가 같은 교수에게 후기를 여러 개 남길 수 있는지는 DB가 아니라 서비스 로직에서 정한다.)
 
 ### COURSE (course)
 

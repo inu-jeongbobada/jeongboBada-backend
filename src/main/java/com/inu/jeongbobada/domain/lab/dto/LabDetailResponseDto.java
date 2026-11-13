@@ -13,6 +13,7 @@ public class LabDetailResponseDto {
     private String labName;
     private String labUrl;
     private String labDetail;
+    private String [] labStudy;
 
     public static LabDetailResponseDto from(Lab lab) {
         if (lab == null) {
@@ -24,6 +25,7 @@ public class LabDetailResponseDto {
             .labName(lab.getLabName())
             .labUrl(lab.getLabUrl())
             .labDetail(lab.getLabDetail())
+            .labStudy(lab.getLabStudy())
             .build();
     }
 }

@@ -31,6 +31,10 @@ public interface ProfessorControllerDocs {
         @ApiResponse(
             responseCode = "200",
             description = "교수 상세 조회 성공"
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "존재하지 않는 교수"
         )
     })
     @GetMapping("/{professorId}")
