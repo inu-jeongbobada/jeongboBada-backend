@@ -110,8 +110,8 @@ S3는 DB 트랜잭션에 묶이지 않는다.
   - Learner Lab 웹 터미널의 CLI는 Lab 계정이 아닌 `runserver` 역할로 실행돼 S3 권한이 없다. 버킷은 콘솔(`AWS ●`)에서 만든다
   - 로컬 키는 `AWS Details` → AWS CLI `Show` 블록을 `~/.aws/credentials`에 넣는다. `Start Lab`마다 바뀐다
 - [x] 버킷 생성(퍼블릭 액세스 차단 유지)
-- [ ] `verification/` 수명주기 규칙
-- [x] 로컬에서 임시 키로 업로드·presigned URL·삭제 확인 (가짜 파일만, `S3RealBucketTest` 통과) — `S3RealBucketTest`를 `S3_TEST_BUCKET`과 함께 실행
+- [x] `verification/` 수명주기 규칙 (`verification-cleanup`, 생성 후 30일 만료 — 연습용 값, 실제 일수는 미정)
+- [x] 로컬에서 임시 키로 업로드·presigned URL·삭제 확인 (가짜 파일만, `S3_TEST_BUCKET`을 주고 `S3RealBucketTest` 실행해 통과)
 
 ## 결정이 필요한 것
 - [ ] 학습자료 허용 파일 형식·최대 크기 (와이어프레임 미정)
