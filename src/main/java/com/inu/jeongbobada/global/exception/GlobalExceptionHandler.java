@@ -5,6 +5,7 @@ import com.inu.jeongbobada.global.common.ApiResponse;
 import com.inu.jeongbobada.global.common.ApiResponse.FieldError;
 import com.inu.jeongbobada.global.exception.code.BaseErrorCode;
 import com.inu.jeongbobada.global.exception.code.GlobalErrorCode;
+import com.inu.jeongbobada.global.file.FileErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.TypeMismatchException;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.exc.MismatchedInputException;
@@ -172,6 +174,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return handleExceptionInternal(ex, null, headers, status, request);
     }
 
+    // 업로드 파일이 spring.servlet.multipart.max-file-size를 넘었을 때. 컨트롤러에 닿기 전에 Spring이 막으므로
+    // FileStorage의 크기 검사와 같은 code로 내보낸다. 한도 값은 예외에 담겨 오지 않아(-1) 기본 문구를 쓴다.
+    @Override
+    protected ResponseEntity<Object> handleMaxUploadSizeExceededException(
+            MaxUploadSizeExceededException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        return handleExceptionInternal(ex, ApiResponse.error(FileErrorCode.FILE_TOO_LARGE), headers, status, request);
+    }
+
     // 부모가 처리하는 모든 표준 예외가 마지막에 모이는 곳. body가 없으면 상태 코드에 맞는 ErrorCode로 ApiResponse를 만든다.
     // Content-Type을 JSON으로 고정하는 이유: Accept가 application/xml처럼 JSON이 아니면 이 에러 응답도 같은 Accept 때문에
     // 직렬화에 실패해 빈 body가 나간다. Content-Type을 미리 지정하면 Spring이 Accept 협상을 건너뛴다 (406 대응).
@@ -197,9 +207,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     // ---------- helpers ----------
 
-    // 표준 예외의 상태 코드 → 응답 code. 목록에 없는 4xx(예: 413 업로드 용량 초과)는 상태 코드는 그대로 두고
-    // code만 INVALID_INPUT_VALUE(400)로 나가서 둘이 어긋난다. 지금은 도달 경로가 없고(업로드 기능 없음), 실제로 나가면
-    // handleExceptionInternal이 error 로그를 남긴다. 그 4xx를 쓰는 기능 PR에서 전용 code를 추가해 여기 매핑한다 (#131).
+    // 표준 예외의 상태 코드 → 응답 code. 목록에 없는 4xx는 상태 코드는 그대로 두고 code만 INVALID_INPUT_VALUE(400)로
+    // 나가서 둘이 어긋난다. 실제로 나가면 handleExceptionInternal이 error 로그를 남긴다.
+    // 그 4xx를 쓰는 기능 PR에서 전용 code를 추가해 여기 매핑하거나, 413처럼 해당 handleXxx를 오버라이드한다 (#131).
     private static BaseErrorCode errorCodeOf(HttpStatusCode status) {
         return switch (status.value()) {
             case 404 -> GlobalErrorCode.API_NOT_FOUND;

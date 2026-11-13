@@ -121,7 +121,7 @@
 ```
 - 상황 하나에 code 하나. HTTP 상태는 응답 status에 있으므로 code에 넣지 않는다 (#115).
 - 새 에러를 추가할 때도 이 규칙을 따르고 이 표에 한 줄 추가한다.
-- 이 표에 없는 4xx는 나가지 않는 것을 원칙으로 한다. 새 4xx(예: 업로드 용량 초과 413)가 필요해지면 그 기능 PR에서 전용 code를 추가한다 (#131).
+- 이 표에 없는 4xx는 나가지 않는 것을 원칙으로 한다. 새 4xx가 필요해지면 그 기능 PR에서 전용 code를 추가한다 (#131).
 
 | HTTP | code | 상황 |
 |---|---|---|
@@ -134,6 +134,10 @@
 | 409 | `DUPLICATE_RESOURCE` | 동시 요청으로 DB UNIQUE 제약에 걸림 (가입 더블클릭 등). 사전 확인에 걸리면 도메인 코드(`DUPLICATE_NICKNAME` 등)가 나가고, 확인과 저장 사이에 다른 요청이 끼어든 경우에만 이 코드 |
 | 415 | `UNSUPPORTED_MEDIA_TYPE` | JSON을 받는 API에 `Content-Type`이 없거나 JSON이 아님 |
 | 500 | `INTERNAL_SERVER_ERROR` | 서버 내부 오류 |
+| 400 | `FILE_EMPTY` | 업로드할 파일이 없거나 비어 있음 |
+| 400 | `FILE_TYPE_NOT_ALLOWED` | 허용하지 않는 파일 형식, 또는 확장자·`Content-Type`·실제 내용이 서로 다름. `message`에 허용 형식 포함 (예: `pdf, jpg 파일만 올릴 수 있어요`) |
+| 413 | `FILE_TOO_LARGE` | 파일 용량 초과. API별 한도를 넘으면 `message`에 한도 포함 (예: `10MB 이하 파일만 올릴 수 있어요`), 서버 전체 한도(10MB)를 넘으면 기본 문구 |
+| 503 | `FILE_UPLOAD_FAILED` | 파일 저장소(S3) 업로드 실패 |
 | 400 | `INVALID_VERIFICATION_CODE` | 이메일 변경 인증코드 없음/만료/불일치(사유는 구분하지 않음), 비밀번호 찾기 코드 없음/없는 학번 |
 | 400 | `PASSWORD_RESET_CODE_MISMATCH` | 비밀번호 찾기 인증번호 불일치. `message`에 n/5회 포함 |
 | 400 | `PASSWORD_RESET_CODE_ATTEMPTS_EXCEEDED` | 비밀번호 찾기 인증번호 5회 불일치로 인증 중단 |

@@ -26,17 +26,18 @@
 
 - [ ] 미인증(`PENDING`) 상태 유저가 로그인은 가능하게 할지, 아예 막을지
 - [ ] 거절(`REJECTED`) 상태 유저 재신청 허용 여부
-- [ ] 증빙 파일 업로드 방식 — presigned URL(클라이언트→S3 직접) vs 서버 경유
-- [ ] 증빙 파일 보관 기간 및 삭제 정책 (개인정보/민감정보라 무기한 보관은 지양)
+- [x] 증빙 파일 업로드 방식 — **서버 경유로 확정** (#98, 2026-09-26). S3 공용 설계는 [file-upload-architecture.md](file-upload-architecture.md)
+- [x] 증빙 파일 보관 기간 및 삭제 정책 — **승인 후 바로 삭제** (와이어프레임 서류 안내 팝업 문구)
 - [ ] S3 버킷 접근 권한 — public 금지, IAM/버킷 정책으로 서버(또는 presigned URL)만 접근 가능하게
 
 ## 상태
 
 ### 1. S3 연동
-- [ ] AWS SDK 의존성 추가
-- [ ] S3 버킷 생성 및 IAM 사용자/권한 설정
-- [ ] `application.yml.example`에 S3 설정 키 추가 (액세스키는 당연히 빈 값, `docker-compose.yml`/`.env.example`도 같이 — `AGENTS.md`의 설정값 체크리스트 참고)
-- [ ] 파일 업로드/다운로드 유틸 클래스
+공용 업로드 컴포넌트로 구현했고, 자세한 내용과 진행 상태는 [file-upload-architecture.md](file-upload-architecture.md)에 적는다.
+- [x] AWS SDK 의존성 추가
+- [ ] S3 버킷 생성 및 권한 설정 (Learner Lab 개설 후)
+- [x] S3 설정 키 추가 (`aws.region`, `aws.s3.bucket`. 액세스 키는 설정 파일이 아니라 환경변수로 받는다)
+- [x] 파일 업로드/삭제/presigned URL 컴포넌트 (`global/file/FileStorage`)
 
 ### 2. 재학 확인 플로우
 - [ ] `User` 엔티티에 `VerificationStatus` 필드 추가
