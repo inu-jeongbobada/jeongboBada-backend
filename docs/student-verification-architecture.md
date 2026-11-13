@@ -47,5 +47,5 @@
 - [ ] 미인증/거절 상태 유저의 로그인 정책 반영
 
 # 예상 브랜치
-- feat/s3-integration
+- feat/s3-upload (공용 업로드 컴포넌트, #169 머지됨)
 - feat/student-verification
