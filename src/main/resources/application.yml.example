@@ -22,6 +22,12 @@ spring:
           auth: true
           starttls:
             enable: true
+  # 파일 업로드 크기 한도. Spring 기본값이 1MB라 가입 서류(최대 10MB)를 받으려면 반드시 올려야 한다.
+  # request는 파일 + 나머지 폼 필드라 조금 더 크게 둔다
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 11MB
   jpa:
     hibernate:
       # update: 엔티티 변경사항을 기동 시 테이블에 자동 반영 (개발 편의용, 운영에서는 지양)
@@ -51,6 +57,14 @@ cors:
     - https://jeongbo-bada-frontend.vercel.app
   allowed-origin-patterns:
     - https://*.vercel.app # Vercel 프리뷰 배포(브랜치마다 URL이 다름)까지 허용
+
+# 파일 업로드(S3). 비밀값이 아니므로 예시를 채워둔다. 버킷은 각자 쓰는 버킷 이름으로 바꾼다.
+# access key·secret은 여기 넣지 않는다. 환경변수 AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
+# AWS_SESSION_TOKEN(Learner Lab 임시 키)으로 넣으면 SDK가 찾는다. 없어도 서버는 뜨고 업로드만 실패한다.
+aws:
+  region: us-east-1
+  s3:
+    bucket: jeongbobada-dev
 
 springdoc:
   swagger-ui:

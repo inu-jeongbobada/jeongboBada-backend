@@ -62,7 +62,7 @@ AGENTS.md 설정값 체크리스트 4곳 + `application-test.properties`(가짜 
 - 파일 앞부분 바이트(pdf `%PDF`, jpg `FF D8 FF`) — 확장자만 바꾼 파일을 막는다
 - 크기 — `max-file-size`를 넘으면 Spring이 먼저 막는다. 이때 500이 아니라 4xx로 나가는지 통합 테스트로 확인한다
 
-### 에러 코드 (안)
+### 에러 코드
 `ErrorCode` enum과 `docs/api-spec.md` 표에 함께 추가한다.
 
 | HTTP | code | 상황 |
@@ -80,13 +80,25 @@ S3는 DB 트랜잭션에 묶이지 않는다.
 ## 진행 상태
 
 ### PR 1. 공용 업로드 컴포넌트 (AWS 없이)
-- [ ] AWS SDK v2 S3 의존성 추가
-- [ ] `AwsProperties`(`@Validated`) + 설정값 5곳 반영
-- [ ] `S3Client`, `S3Presigner` 빈
-- [ ] 업로드 / 삭제 / presigned GET URL 발급
-- [ ] 검증(빈 파일·형식·시그니처) + 단위 테스트
-- [ ] 에러 코드 + `api-spec.md` 표
-- [ ] `max-file-size` 초과 시 4xx 통합 테스트
+- [x] AWS SDK v2 S3 의존성 추가 (`software.amazon.awssdk:bom` 2.57.4 + `s3`)
+- [x] `AwsProperties`(`@Validated`) + 설정값 5곳 반영
+  - `docker-compose.yml`은 region·bucket에 기본값(`us-east-1`, `jeongbobada-dev`)을 둔다. 비밀값이 아니고, 기본값이 없으면 `.env`가 빈 CI 스모크에서 기동이 실패한다
+  - 자격 증명 환경변수 3개(`AWS_ACCESS_KEY_ID` 등)는 `.env` → `docker-compose.yml`로 그대로 넘기기만 한다. 비어 있어도 기동된다
+- [x] `S3Client`, `S3Presigner` 빈 (`global/file/S3Config`, 자격 증명은 `DefaultCredentialsProvider`)
+- [x] 업로드 / 삭제 / presigned GET URL 발급 (`global/file/FileStorage`)
+  - `upload(prefix, file, 허용 형식, 최대 크기)` → key 반환. 허용 형식은 `FileType`(지금은 `PDF`, `JPG`) 중에서 고른다
+  - prefix 상수는 쓰는 곳(PR 2)에서 만든다. 이번 PR에는 호출하는 곳이 없다
+  - `delete`와 `presignedGetUrl`은 S3 예외를 바꾸지 않고 그대로 던진다. 업로드 직후 정리인지, DB 삭제 뒤 정리인지에 따라 처리가 달라서 호출하는 쪽이 정한다 ("트랜잭션" 참고)
+  - presigned URL 만료 시간은 호출하는 쪽이 넘긴다 (아래 "결정이 필요한 것")
+- [x] 검증(빈 파일·크기·형식·시그니처) + 단위 테스트 `FileStorageTest`
+  - 형식은 확장자로 고르고, `Content-Type`과 앞부분 바이트가 **둘 다** 그 형식과 맞아야 한다. `.jpeg`도 받지만 key는 `.jpg`
+  - 크기도 여기서 한 번 더 본다. API마다 한도가 다를 수 있어서 `max-file-size`(서버 전체 한도)만으로는 부족하다
+- [x] 에러 코드(`FileErrorCode`) + `api-spec.md` 표
+- [x] `max-file-size` 초과 시 413 `FILE_TOO_LARGE` 통합 테스트 `MultipartSizeLimitIntegrationTest`
+  - 업로드 API가 아직 없어서 공개 API(로그인)에 multipart를 보낸다. multipart 해석은 컨트롤러보다 먼저 일어나므로 같은 경로를 탄다
+  - MockMvc는 크기 한도를 적용하지 않아서, 실제 Tomcat을 띄우고(`RANDOM_PORT`) HTTP로 보낸다
+  - `GlobalExceptionHandler`가 부모의 `handleMaxUploadSizeExceededException`을 오버라이드한다 (#111). 이때는 한도 값이 예외에 안 담겨 와서(-1) 기본 문구가 나간다
+- [x] 실제 S3 확인용 `S3RealBucketTest` — 환경변수 `S3_TEST_BUCKET`이 있을 때만 돈다 (CI는 자동 skip). 업로드 → presigned URL로 내려받기 → 삭제까지 확인. 실행법은 테스트 파일 주석 참고
 
 ### PR 2. 가입 서류 연결 → [student-verification-architecture.md](student-verification-architecture.md)
 - [ ] `POST /api/auth/signup` multipart 전환, 서류 필수
@@ -96,7 +108,7 @@ S3는 DB 트랜잭션에 묶이지 않는다.
 ### 3. Learner Lab 실제 확인 (개설 후)
 - [ ] 리전·서비스 제한 확인 후 이 문서에 기록
 - [ ] 버킷 생성(퍼블릭 액세스 차단 유지), `verification/` 수명주기 규칙
-- [ ] 로컬에서 임시 키로 업로드·presigned URL·삭제 확인 (가짜 파일만)
+- [ ] 로컬에서 임시 키로 업로드·presigned URL·삭제 확인 (가짜 파일만) — `S3RealBucketTest`를 `S3_TEST_BUCKET`과 함께 실행
 
 ## 결정이 필요한 것
 - [ ] 학습자료 허용 파일 형식·최대 크기 (와이어프레임 미정)
