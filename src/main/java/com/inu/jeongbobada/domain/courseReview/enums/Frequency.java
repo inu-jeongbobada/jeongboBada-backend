@@ -1,10 +1,8 @@
 package com.inu.jeongbobada.domain.courseReview.enums;
 
-public enum Amount {
-    VERY_LOW,
+public enum Frequency {
+    NONE,
     LOW,
     NORMAL,
-    HIGH,
-    VERY_HIGH
-
+    HIGH
 }

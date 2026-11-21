@@ -1,8 +1,8 @@
 package com.inu.jeongbobada.domain.courseReview.service;
 
 import com.inu.jeongbobada.domain.course.exception.CourseErrorCode;
-import com.inu.jeongbobada.domain.course.repository.CourseOfferingRepository;
 import com.inu.jeongbobada.domain.course.repository.CourseRepository;
+import com.inu.jeongbobada.domain.course.repository.CourseOfferingRepository;
 import com.inu.jeongbobada.domain.courseReview.entity.CourseReview;
 import com.inu.jeongbobada.domain.courseReview.enums.Rating;
 import com.inu.jeongbobada.domain.courseReview.enums.ReviewSort;

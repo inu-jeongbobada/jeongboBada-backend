@@ -1,6 +1,7 @@
 package com.inu.jeongbobada.domain.courseReview.entity;
 
 import com.inu.jeongbobada.domain.course.entity.Course;
+import com.inu.jeongbobada.domain.course.enums.Semester;
 import com.inu.jeongbobada.domain.courseReview.enums.*;
 import com.inu.jeongbobada.domain.professor.entity.Professor;
 import com.inu.jeongbobada.domain.user.entity.User;
@@ -52,42 +53,30 @@ public class CourseReview extends BaseEntity {
     @JoinColumn(name = "PROFESSOR_ID", nullable = false)
     private Professor professor;
 
+    // 작성자가 이 과목을 수강한 연도와 학기를 후기 정보로 보존한다.
+    @Enumerated(EnumType.STRING)
+    @Column(name = "ACADEMIC_YEAR", nullable = false)
+    private AcademicYear academicYear;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "SEMESTER", nullable = false)
+    private Semester semester;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "RATING",nullable = false)
     private Rating rating;
 
     @NotBlank
-    @Size(min = 20, max = 500)
-    @Column(name = "CONTENT",length = 500, nullable = false)
+    @Size(min = 20, max = 1000)
+    @Column(name = "CONTENT", length = 1000, nullable = false)
     private String content;
 
-
-    //서적 필요 여부
-    @Enumerated(EnumType.STRING)
-    @Column(name = "TEXT_BOOK", nullable = false)
-    private TextBook textbook;
-
-
-    //과제 어려운지
-    @Enumerated(EnumType.STRING)
-    @Column(name = "ASSIGNMENT_DIFFICULTY", nullable = false)
-    private Difficulty assignmentDifficulty;
-
-
-    //과제 양
-    @Enumerated(EnumType.STRING)
-    @Column(name = "ASSIGNMENT_AMOUNT", nullable = false)
-    private Amount assignmentAmount;
-
-
-
-    //조모임 많은지 안많은지
+    // 조모임 빈도
     @Enumerated(EnumType.STRING)
     @Column(name = "GROUP_ACTIVITY", nullable = false)
     private GroupActivity groupActivity;
 
-
-    // 출결 변덕스러운지 안스러운지
+    // 출결 방식
     @Enumerated(EnumType.STRING)
     @Column(name = "ATTENDANCE",nullable = false)
     private Attendance attendance;
@@ -95,23 +84,17 @@ public class CourseReview extends BaseEntity {
     // 시험 횟수
     @Enumerated(EnumType.STRING)
     @Column(name = "EXAM_COUNT", nullable = false)
-    private Count examCount;
+    private ExamCount examCount;
 
-    //퀴즈 난이도
+    // 과제 빈도
     @Enumerated(EnumType.STRING)
-    @Column(name = "QUIZ_DIFFICULTY", nullable = false)
-    private Difficulty quizDifficulty;
+    @Column(name = "ASSIGNMENT_FREQUENCY", nullable = false)
+    private Frequency assignmentFrequency;
 
-
-    //시험 난이도
+    // 퀴즈 빈도
     @Enumerated(EnumType.STRING)
-    @Column(name = "EXAM_DIFFICULTY", nullable = false)
-    private Difficulty examDifficulty;
-
-    //쪽지시험 횟수
-    @Enumerated(EnumType.STRING)
-    @Column(name = "QUIZ_COUNT", nullable = false)
-    private Count quizCount;
+    @Column(name = "QUIZ_FREQUENCY", nullable = false)
+    private Frequency quizFrequency;
 
     // 널널하게 주는지 안주는지
     @Enumerated(EnumType.STRING)
@@ -123,61 +106,49 @@ public class CourseReview extends BaseEntity {
         User user,
         Course course,
         Professor professor,
+        AcademicYear academicYear,
+        Semester semester,
         Rating rating,
         String content,
-        TextBook textbook,
-        Difficulty assignmentDifficulty,
-        Amount assignmentAmount,
         GroupActivity groupActivity,
         Attendance attendance,
-        Count examCount,
-        Difficulty quizDifficulty,
-        Difficulty examDifficulty,
-        Count quizCount,
+        ExamCount examCount,
+        Frequency assignmentFrequency,
+        Frequency quizFrequency,
         GradingType gradingType
     ) {
         this.user = user;
         this.course = course;
         this.professor = professor;
+        this.academicYear = academicYear;
+        this.semester = semester;
         this.rating = rating;
         this.content = content;
-        this.textbook = textbook;
-        this.assignmentDifficulty = assignmentDifficulty;
-        this.assignmentAmount = assignmentAmount;
         this.groupActivity = groupActivity;
         this.attendance = attendance;
         this.examCount = examCount;
-        this.quizDifficulty = quizDifficulty;
-        this.examDifficulty = examDifficulty;
-        this.quizCount = quizCount;
+        this.assignmentFrequency = assignmentFrequency;
+        this.quizFrequency = quizFrequency;
         this.gradingType = gradingType;
     }
 
     public void update(
         Rating rating,
         String content,
-        TextBook textbook,
-        Difficulty assignmentDifficulty,
-        Amount assignmentAmount,
         GroupActivity groupActivity,
         Attendance attendance,
-        Count examCount,
-        Difficulty quizDifficulty,
-        Difficulty examDifficulty,
-        Count quizCount,
+        ExamCount examCount,
+        Frequency assignmentFrequency,
+        Frequency quizFrequency,
         GradingType gradingType
     ) {
         this.rating = rating;
         this.content = content;
-        this.textbook = textbook;
-        this.assignmentDifficulty = assignmentDifficulty;
-        this.assignmentAmount = assignmentAmount;
         this.groupActivity = groupActivity;
         this.attendance = attendance;
         this.examCount = examCount;
-        this.quizDifficulty = quizDifficulty;
-        this.examDifficulty = examDifficulty;
-        this.quizCount = quizCount;
+        this.assignmentFrequency = assignmentFrequency;
+        this.quizFrequency = quizFrequency;
         this.gradingType = gradingType;
     }
 }

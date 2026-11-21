@@ -12,8 +12,14 @@ public interface CourseReviewRepository extends JpaRepository<CourseReview, Long
     // URL의 과목과 삭제 대상 후기가 실제로 연결돼 있는지 함께 확인한다.
     Optional<CourseReview> findByReviewIdAndCourse_CourseId(Long reviewId, Long courseId);
 
-    // 중복 작성 사전 확인 — UNIQUE (USER_ID, COURSE_ID, PROFESSOR_ID)와 같은 조합
-    boolean existsByUser_UserIdAndCourse_CourseIdAndProfessor_ProfessorId(Long userId, Long courseId, Long professorId);
+    // 수강 시기는 후기 정보로만 저장하며, 같은 사용자는 같은 과목·교수 조합에 한 번만 작성할 수 있다.
+    boolean existsByUser_UserIdAndCourse_CourseIdAndProfessor_ProfessorId(
+        Long userId,
+        Long courseId,
+        Long professorId
+    );
+
+    List<CourseReview> findAllByCourse_CourseIdAndProfessor_ProfessorId(Long courseId, Long professorId);
 
     //  과목별 후기를 작성일 최신순으로 조회 작성일이 같으면 후기 ID 내림차순
 

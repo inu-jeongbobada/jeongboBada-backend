@@ -44,12 +44,11 @@ class SeedDataIntegrationTest {
             """);
         Long userId = jdbcTemplate.queryForObject("SELECT user_id FROM users WHERE student_id = '999000111'", Long.class);
         jdbcTemplate.update("""
-            INSERT INTO course_review (user_id, course_id, professor_id, like_count, rating, content, text_book,
-                assignment_difficulty, assignment_amount, group_activity, attendance, exam_count,
-                quiz_difficulty, exam_difficulty, quiz_count, grading_type, created_at, updated_at)
-            VALUES (?, 1, 1, 0, 'ONE', '재시작해도 남아야 하는 후기', 'REQUIRED',
-                'VERY_EASY', 'VERY_LOW', 'NONE', 'STRICT', 'ZERO',
-                'VERY_EASY', 'VERY_EASY', 'ZERO', 'VERY_GENEROUS', NOW(), NOW())
+            INSERT INTO course_review (user_id, course_id, professor_id, academic_year, semester,
+                like_count, rating, content, group_activity, attendance, exam_count,
+                assignment_frequency, quiz_frequency, grading_type, created_at, updated_at)
+            VALUES (?, 1, 1, 'YEAR_2026', 'FIRST', 0, 'ONE', '재시작해도 남아야 하는 후기',
+                'NONE', 'ELECTRONIC', 'ZERO', 'NONE', 'NONE', 'VERY_GENEROUS', NOW(), NOW())
             """, userId);
 
         runSeed();

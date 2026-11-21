@@ -1,10 +1,26 @@
 package com.inu.jeongbobada.domain.courseReview.dto.response;
 
-public class ReviewSummaryResDto {
+import com.inu.jeongbobada.domain.courseReview.enums.Attendance;
+import com.inu.jeongbobada.domain.courseReview.enums.ExamCount;
+import com.inu.jeongbobada.domain.courseReview.enums.Frequency;
+import com.inu.jeongbobada.domain.courseReview.enums.GradingType;
+import com.inu.jeongbobada.domain.courseReview.enums.GroupActivity;
 
-
-//추후 기능 추가
-
-
-
+public record ReviewSummaryResDto(
+    long reviewCount,
+    boolean summaryAvailable,
+    int minimumReviewCount,
+    Double averageRating,
+    Double gradingTypeAverage,
+    GradingType gradingType,
+    Double groupActivityAverage,
+    GroupActivity groupActivity,
+    Double examCountAverage,
+    ExamCount examCount,
+    Double assignmentFrequencyAverage,
+    Frequency assignmentFrequency,
+    Double quizFrequencyAverage,
+    Frequency quizFrequency,
+    Attendance attendance
+) {
 }

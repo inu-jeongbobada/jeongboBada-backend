@@ -3,6 +3,7 @@ package com.inu.jeongbobada.domain.courseReview.controller;
 import com.inu.jeongbobada.domain.courseReview.dto.request.ReviewCreateReqDto;
 import com.inu.jeongbobada.domain.courseReview.dto.request.ReviewUpdateReqDto;
 import com.inu.jeongbobada.domain.courseReview.dto.response.ReviewResDto;
+import com.inu.jeongbobada.domain.courseReview.dto.response.ReviewSummaryResDto;
 import com.inu.jeongbobada.domain.courseReview.enums.ReviewSort;
 import com.inu.jeongbobada.domain.courseReview.service.CourseReviewService;
 import com.inu.jeongbobada.domain.user.security.CustomUserDetails;
@@ -61,6 +62,16 @@ public class CourseReviewController {
 
 
         List<ReviewResDto> response = courseReviewService.getReviews(courseId, sort);
+
+        return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    @GetMapping("/{courseId}/reviews/summary")
+    public ResponseEntity<ApiResponse<ReviewSummaryResDto>> getReviewSummary(
+        @PathVariable Long courseId,
+        @RequestParam Long professorId
+    ) {
+        ReviewSummaryResDto response = courseReviewService.getReviewSummary(courseId, professorId);
 
         return ResponseEntity.ok(ApiResponse.ok(response));
     }

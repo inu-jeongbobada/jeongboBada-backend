@@ -43,9 +43,11 @@ CourseOffering (학기별 개설, 학기마다 값이 바뀌는 정보)
  └─ UNIQUE(course, professor, academicYear, semester)
      -> 같은 과목을 같은 교수가 같은 학기에 또 넣으면 새 행이 아니라 기존 행을 갱신
 
-CourseReview (기존 + professor 추가)
- ├─ course     FK -> Course      (학기 안 타는 리뷰 대상 축 1)
- ├─ professor  FK -> Professor   (리뷰 대상 축 2 — NEW)
+CourseReview (후기 작성 당시 수강 정보)
+ ├─ course        FK -> Course      (학기 안 타는 리뷰 대상 축 1)
+ ├─ professor     FK -> Professor   (리뷰 대상 축 2)
+ ├─ academicYear  작성자가 수강한 연도 (YEAR_2023~YEAR_2026)
+ ├─ semester      작성자가 수강한 학기
  └─ UNIQUE(user, course, professor)
 ```
 
@@ -56,10 +58,12 @@ CourseReview (기존 + professor 추가)
 - `GET /api/courses` — **이번 학기 개설 강의(활성 CourseOffering) 기준으로 한 줄씩** 응답. `courseId`는 Course의 안정적인 id라서, 이 값으로 상세/후기 조회를 계속 이어갈 수 있다. (기존엔 목록 응답에 courseId가 아예 없던 버그가 있었음 — 이번에 같이 해결됨)
   - 선택 쿼리 파라미터 `keyword`로 강의명·교수명 부분 일치 검색. 검색어와 저장된 이름의 공백을 제거해 비교하고, 빈 검색어는 전체 목록을 반환한다.
 - `GET /api/courses/{courseId}` — Course 기본 정보 + 그 과목의 활성 `CourseOffering` 목록(교수/시간표/학점 등)을 함께 반환.
-- `POST /api/courses/{courseId}/reviews` — 요청 바디에 `professorId`가 추가됨 (같은 과목도 교수마다 리뷰를 따로 남길 수 있어서). 서버는 그 `(course, professor)` 조합으로 실제 개설된 적이 있는지(`CourseOffering` 존재 여부) 검증 후 저장.
+- `POST /api/courses/{courseId}/reviews` — `academicYear`, `semester`는 작성자가 선택한 수강 시기로 후기에 저장하고 개설 이력과 대조하지 않는다. 단, 엉뚱한 과목·교수 조합을 막기 위해 해당 교수가 과목을 담당한 이력은 확인한다. 연도·학기는 후기 조회 필터나 중복 기준에도 사용하지 않는다.
   - 로그인 필요 — `SecurityConfig`에서 **POST만** `authenticated()` (조회 GET은 공개). 컨트롤러 null 체크 대신 여기서 막아야 토큰 없는 잘못된 요청이 400이 아니라 401이 된다.
   - 요청 DTO(`ReviewCreateReqDto`)에 엔티티와 같은 필수·길이 검증 + `@Valid` → 누락 시 500이 아니라 400(`errors`에 필드) (#105).
-  - 같은 `(user, course, professor)`로 이미 썼으면 서비스 사전 확인에서 409 `DUPLICATE_COURSE_REVIEW`.
+  - 같은 `(user, course, professor)`로 이미 썼으면 수강 시기가 달라도 서비스 사전 확인에서 409 `DUPLICATE_COURSE_REVIEW`.
+  - 화면에 있는 평가 항목만 저장한다: 별점, 후기 내용, 학점 기준, 조모임 빈도, 시험 횟수, 과제·퀴즈 빈도, 출결 방식.
+- `GET /api/courses/{courseId}/reviews/summary?professorId=` — 과목·교수별 후기 3개 이상이면 평점과 순서형 평가 항목의 평균·라벨을 반환한다. 출결은 최빈값이며 동률이면 한글 표시명의 가나다순으로 선택한다. 3개 미만이면 `summaryAvailable=false`다.
 
 ## 구현 상태
 
@@ -69,9 +73,13 @@ CourseReview (기존 + professor 추가)
 - [x] `GET /api/courses?keyword=` — 강의명·교수명 부분 일치 검색(공백 무시, 최대 50자)
 - [x] `GET /api/courses?keyword=` — 강의명·교수명 초성 검색
 - [x] `GET /api/courses?page=&size=` — DB 페이징 및 `totalElements`, `totalPages`, `hasNext` 응답
-- [x] `CourseReview`에 `professor` FK 추가, unique 제약 `(user, course, professor)`로 변경
+- [x] `CourseReview`에 `professor` FK 추가, unique 제약 `(user, course, professor)` 적용
 - [x] `POST .../reviews`에 `professorId` 검증 로직 추가 (컴파일/단위테스트만 확인, **실제 로그인 붙여서 수동 테스트는 아직 안 함**)
+- [x] 후기 작성 시 수강 연도·학기 검증 및 저장, 후기 조회 응답에 포함
+- [x] 후기 작성 화면에 맞춰 평가 항목 단순화 및 후기 최대 길이 1000자로 변경
+  - 기존 PostgreSQL 테이블은 [`scripts/db/course-review-form-migration.sql`](../scripts/db/course-review-form-migration.sql) 적용 필요. 기존 후기가 있으면 수강 시기를 임의 추정하지 않고 마이그레이션을 중단한다.
 - [x] 강의평 작성 요청 검증·중복 작성 409 (#105) — 통합 테스트 `CourseReviewCreateIntegrationTest`
+- [x] 교수별 강의평 요약 API — 평균·출결 최빈값·후기 3개 미만 미노출
 - [x] 엔티티 검증 실패(`ConstraintViolationException`)를 400 → 500으로 전환 (#139) — 입력 검증은 요청 DTO가 맡고, 엔티티 검증 실패는 서버 버그로 본다
 - [x] `data.sql`을 새 스키마(course + course_offering)로 재작성
 - [ ] 매 학기 엑셀(종합강의시간표) import 파이프라인 — courseCode로 Course 매칭, (course,professor,year,semester)로 CourseOffering upsert. **아직 미구현, 이번 작업 범위 밖.**
